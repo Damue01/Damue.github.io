@@ -1,0 +1,535 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>GAS UI信息同步 | 小禾苗の垃圾堆</title><meta name="author" content="Damue"><meta name="copyright" content="Damue"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="UI属性绑定实现思路 通过C++创建GameplayTags（可以在C++和蓝图中同时获取到tag） 创建一个DataAsset类，设置tag对应的属性和显示内容 创建AttritbueMenuWidgetController实现对应的逻辑  旧版配置委托的实现OverlayWidget作为整体的展示页面，展示血条和蓝条，配套的是OverlayWidgetController  在其中实现定义委托">
+<meta property="og:type" content="article">
+<meta property="og:title" content="GAS UI信息同步">
+<meta property="og:url" content="https://damue01.github.io/2024/11/14/GAS%20UI%E4%BF%A1%E6%81%AF%E5%90%8C%E6%AD%A5/index.html">
+<meta property="og:site_name" content="小禾苗の垃圾堆">
+<meta property="og:description" content="UI属性绑定实现思路 通过C++创建GameplayTags（可以在C++和蓝图中同时获取到tag） 创建一个DataAsset类，设置tag对应的属性和显示内容 创建AttritbueMenuWidgetController实现对应的逻辑  旧版配置委托的实现OverlayWidget作为整体的展示页面，展示血条和蓝条，配套的是OverlayWidgetController  在其中实现定义委托">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://damue01.github.io/img/avatar.jpg">
+<meta property="article:published_time" content="2024-11-14T13:28:15.999Z">
+<meta property="article:modified_time" content="2024-11-14T14:03:41.565Z">
+<meta property="article:author" content="Damue">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://damue01.github.io/img/avatar.jpg"><link rel="shortcut icon" href="/img/icon.gif"><link rel="canonical" href="https://damue01.github.io/2024/11/14/GAS%20UI%E4%BF%A1%E6%81%AF%E5%90%8C%E6%AD%A5/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css"><script>
+    (() => {
+      
+    const saveToLocal = {
+      set: (key, value, ttl) => {
+        if (!ttl) return
+        const expiry = Date.now() + ttl * 86400000
+        localStorage.setItem(key, JSON.stringify({ value, expiry }))
+      },
+      get: key => {
+        const itemStr = localStorage.getItem(key)
+        if (!itemStr) return undefined
+        const { value, expiry } = JSON.parse(itemStr)
+        if (Date.now() > expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return value
+      }
+    }
+
+    window.btf = {
+      saveToLocal,
+      getScript: (url, attr = {}) => new Promise((resolve, reject) => {
+        const script = document.createElement('script')
+        script.src = url
+        script.async = true
+        Object.entries(attr).forEach(([key, val]) => script.setAttribute(key, val))
+        script.onload = script.onreadystatechange = () => {
+          if (!script.readyState || /loaded|complete/.test(script.readyState)) resolve()
+        }
+        script.onerror = reject
+        document.head.appendChild(script)
+      }),
+      getCSS: (url, id) => new Promise((resolve, reject) => {
+        const link = document.createElement('link')
+        link.rel = 'stylesheet'
+        link.href = url
+        if (id) link.id = id
+        link.onload = link.onreadystatechange = () => {
+          if (!link.readyState || /loaded|complete/.test(link.readyState)) resolve()
+        }
+        link.onerror = reject
+        document.head.appendChild(link)
+      }),
+      addGlobalFn: (key, fn, name = false, parent = window) => {
+        if (!false && key.startsWith('pjax')) return
+        const globalFn = parent.globalFn || {}
+        globalFn[key] = globalFn[key] || {}
+        if (name && globalFn[key][name]) return
+        globalFn[key][name || Object.keys(globalFn[key]).length] = fn
+        parent.globalFn = globalFn
+      }
+    }
+  
+      
+      const activateDarkMode = () => {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      const activateLightMode = () => {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+
+      btf.activateDarkMode = activateDarkMode
+      btf.activateLightMode = activateLightMode
+
+      const theme = saveToLocal.get('theme')
+    
+          theme === 'dark' ? activateDarkMode() : theme === 'light' ? activateLightMode() : null
+        
+      
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        document.documentElement.classList.toggle('hide-aside', asideStatus === 'hide')
+      }
+    
+      
+    const detectApple = () => {
+      if (/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)) {
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+  
+    })()
+  </script><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: undefined,
+  translate: undefined,
+  noticeOutdate: undefined,
+  highlight: {"plugin":"highlight.js","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false,"highlightFullpage":false,"highlightMacStyle":false},
+  copy: {
+    success: '复制成功',
+    error: '复制失败',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: true
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'null',
+  Snackbar: undefined,
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid/dist/infinitegrid.min.js',
+    buttonText: '加载更多'
+  },
+  isPhotoFigcaption: false,
+  islazyload: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: true,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: 'GAS UI信息同步',
+  isPost: true,
+  isHome: false,
+  isHighlightShrink: false,
+  isToc: true,
+  postUpdate: '2024-11-14 22:03:41'
+}</script><meta name="generator" content="Hexo 7.3.0"></head><body><div id="loading-box" onclick="document.getElementById(&quot;loading-box&quot;).classList.add(&quot;loaded&quot;)"><div class="loading-bg"><div class="loading-img"></div><div class="loading-image-dot"></div></div></div><script>const preloader = {
+  endLoading: () => {
+    document.body.style.overflow = 'auto';
+    document.getElementById('loading-box').classList.add("loaded")
+  },
+  initLoading: () => {
+    document.body.style.overflow = '';
+    document.getElementById('loading-box').classList.remove("loaded")
+
+  }
+}
+window.addEventListener('load',()=> { preloader.endLoading() })
+
+if (false) {
+  document.addEventListener('pjax:send', () => { preloader.initLoading() })
+  document.addEventListener('pjax:complete', () => { preloader.endLoading() })
+}</script><div class="post" id="body-wrap"><header class="post-bg" id="page-header" style="background-image: url(https://api.paugram.com/wallpaper/);"><nav id="nav"><span id="blog-info"><a class="nav-site-title" href="/"><span class="site-name">小禾苗の垃圾堆</span></a><a class="nav-page-title" href="/"><span class="site-name">GAS UI信息同步</span></a></span><div id="menus"></div></nav><div id="post-info"><h1 class="post-title">GAS UI信息同步</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2024-11-14T13:28:15.999Z" title="发表于 2024-11-14 21:28:15">2024-11-14</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2024-11-14T14:03:41.565Z" title="更新于 2024-11-14 22:03:41">2024-11-14</time></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-wordcount"><i class="far fa-file-word fa-fw post-meta-icon"></i><span class="post-meta-label">总字数:</span><span class="word-count">4.5k</span><span class="post-meta-separator">|</span><i class="far fa-clock fa-fw post-meta-icon"></i><span class="post-meta-label">阅读时长:</span><span>18分钟</span></span><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title=""><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">浏览量:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="post-content" id="article-container"><h3 id="UI属性绑定"><a href="#UI属性绑定" class="headerlink" title="UI属性绑定"></a>UI属性绑定</h3><h4 id="实现思路"><a href="#实现思路" class="headerlink" title="实现思路"></a>实现思路</h4><ol>
+<li>通过C++创建GameplayTags（可以在C++和蓝图中同时获取到tag）</li>
+<li>创建一个DataAsset类，设置tag对应的属性和显示内容</li>
+<li>创建<code>AttritbueMenuWidgetController</code>实现对应的逻辑</li>
+</ol>
+<h4 id="旧版配置委托的实现"><a href="#旧版配置委托的实现" class="headerlink" title="旧版配置委托的实现"></a>旧版配置委托的实现</h4><p>OverlayWidget作为整体的展示页面，展示血条和蓝条，配套的是OverlayWidgetController</p>
+<p><img src="https://z1wnxhhnqil.feishu.cn/space/api/box/stream/download/asynccode/?code=YzQ5YjlhYzZiZGE4MDk3OWYzNzNmODBlYWJkMTZjMTRfV0JuOHB0OFp0azhsaVF2RElXVEJWZGdKU1E3WWZWUGtfVG9rZW46S2FGQmJucVB5b09GZWF4NlFXOGNVcUU2bjlkXzE3MzE1OTA5MjQ6MTczMTU5NDUyNF9WNA" alt="img"></p>
+<p>在其中实现定义委托</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam</span>(FOnAttributeChangedSignature, <span class="type">float</span>, NewAttribute);</span><br></pre></td></tr></table></figure>
+
+<p>在创建对应属性的委托</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">virtual</span> <span class="type">void</span> <span class="title">BroadcastInitialValues</span><span class="params">()</span> <span class="keyword">override</span></span>;</span><br><span class="line"><span class="function"><span class="keyword">virtual</span> <span class="type">void</span> <span class="title">BindCallbacksToDependencies</span><span class="params">()</span> <span class="keyword">override</span></span>;</span><br><span class="line"></span><br><span class="line"><span class="built_in">UPROPERTY</span>(BlueprintAssignable, Category=<span class="string">&quot;GAS|Attributes&quot;</span>)</span><br><span class="line">FOnAttributeChangedSignature OnHealthChanged;</span><br><span class="line"></span><br><span class="line"><span class="built_in">UPROPERTY</span>(BlueprintAssignable, Category=<span class="string">&quot;GAS|Attributes&quot;</span>)</span><br><span class="line">FOnAttributeChangedSignature OnMaxHealthChanged;</span><br><span class="line"></span><br><span class="line"><span class="built_in">UPROPERTY</span>(BlueprintAssignable, Category=<span class="string">&quot;GAS|Attributes&quot;</span>)</span><br><span class="line">FOnAttributeChangedSignature OnManaChanged;</span><br><span class="line"></span><br><span class="line"><span class="built_in">UPROPERTY</span>(BlueprintAssignable, Category=<span class="string">&quot;GAS|Attributes&quot;</span>)</span><br><span class="line">FOnAttributeChangedSignature OnMaxManaChanged;</span><br><span class="line"></span><br><span class="line"><span class="built_in">UPROPERTY</span>(BlueprintAssignable, Category=<span class="string">&quot;GAS|Messages&quot;</span>)</span><br><span class="line">FMessageWidgetRowSignature MessageWidgetRowDelegate;</span><br></pre></td></tr></table></figure>
+
+<p>然后我们使用GAS里自带的一个函数<code>GetGameplayAttributeValueChangeDelegate</code></p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">DECLARE_MULTICAST_DELEGATE_OneParam</span>(FOnGameplayAttributeValueChange, <span class="type">const</span> FOnAttributeChangeData&amp;);</span><br><span class="line"></span><br><span class="line"><span class="comment">/** Register for when an attribute value changes */</span></span><br><span class="line"><span class="function">FOnGameplayAttributeValueChange&amp; <span class="title">GetGameplayAttributeValueChangeDelegate</span><span class="params">(FGameplayAttribute Attribute)</span></span>;</span><br></pre></td></tr></table></figure>
+
+<p>配置对应触发的回调</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">AbilitySystemComponent-&gt;<span class="built_in">GetGameplayAttributeValueChangeDelegate</span>(AttributeSetBase-&gt;<span class="built_in">GetHealthAttribute</span>()).<span class="built_in">AddLambda</span>([<span class="keyword">this</span>](<span class="type">const</span> FOnAttributeChangeData&amp; Data)&#123;OnHealthChanged.<span class="built_in">Broadcast</span>(Data.NewValue);&#125;);</span><br><span class="line">AbilitySystemComponent-&gt;<span class="built_in">GetGameplayAttributeValueChangeDelegate</span>(AttributeSetBase-&gt;<span class="built_in">GetMaxHealthAttribute</span>()).<span class="built_in">AddLambda</span>([<span class="keyword">this</span>](<span class="type">const</span> FOnAttributeChangeData&amp; Data)&#123;OnMaxHealthChanged.<span class="built_in">Broadcast</span>(Data.NewValue);&#125;);</span><br><span class="line">AbilitySystemComponent-&gt;<span class="built_in">GetGameplayAttributeValueChangeDelegate</span>(AttributeSetBase-&gt;<span class="built_in">GetManaAttribute</span>()).<span class="built_in">AddLambda</span>([<span class="keyword">this</span>](<span class="type">const</span> FOnAttributeChangeData&amp; Data)&#123;OnManaChanged.<span class="built_in">Broadcast</span>(Data.NewValue);&#125;);</span><br><span class="line">AbilitySystemComponent-&gt;<span class="built_in">GetGameplayAttributeValueChangeDelegate</span>(AttributeSetBase-&gt;<span class="built_in">GetMaxManaAttribute</span>()).<span class="built_in">AddLambda</span>([<span class="keyword">this</span>](<span class="type">const</span> FOnAttributeChangeData&amp; Data)&#123;OnMaxManaChanged.<span class="built_in">Broadcast</span>(Data.NewValue);&#125;);</span><br></pre></td></tr></table></figure>
+
+<p>上面是在传入的时候有绑定了一个lamada函数，从而在Value Change的时候触发我们自定义的委托</p>
+<blockquote>
+<p>[capture-list] (parameters) -&gt; return-type { body }</p>
+<ul>
+<li>capture-list: 捕获外部变量的列表，可以为空。</li>
+<li>parameters: 函数参数列表，可以为空。</li>
+<li>return-type: 返回类型，可以省略（编译器会自动推断）。</li>
+<li>body: 函数体。</li>
+</ul>
+<p>捕获列表</p>
+<ul>
+<li></li>
+<li></li>
+<li></li>
+<li></li>
+</ul>
+</blockquote>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">FOnGameplayAttributeValueChange&amp; <span class="title">UAbilitySystemComponent::GetGameplayAttributeValueChangeDelegate</span><span class="params">(FGameplayAttribute Attribute)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">return</span> ActiveGameplayEffects.<span class="built_in">GetGameplayAttributeValueChangeDelegate</span>(Attribute);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 查找对应的属性委托，没有就添加</span></span><br><span class="line"><span class="function">FOnGameplayAttributeValueChange&amp; <span class="title">FActiveGameplayEffectsContainer::GetGameplayAttributeValueChangeDelegate</span><span class="params">(FGameplayAttribute Attribute)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">return</span> AttributeValueChangeDelegates.<span class="built_in">FindOrAdd</span>(Attribute);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 存储一些委托</span></span><br><span class="line">TMap&lt;FGameplayAttribute, FOnGameplayAttributeValueChange&gt; AttributeValueChangeDelegates;</span><br><span class="line"><span class="comment">// 又回到了这个委托定义</span></span><br><span class="line"><span class="built_in">DECLARE_MULTICAST_DELEGATE_OneParam</span>(FOnGameplayAttributeValueChange, <span class="type">const</span> FOnAttributeChangeData&amp;);</span><br></pre></td></tr></table></figure>
+
+<h5 id="GameplayAttribute"><a href="#GameplayAttribute" class="headerlink" title="GameplayAttribute"></a>GameplayAttribute</h5><p><a target="_blank" rel="noopener" href="https://dev.epicgames.com/documentation/en-us/unreal-engine/gameplay-attributes-and-attribute-sets-for-the-gameplay-ability-system-in-unreal-engine">https://dev.epicgames.com/documentation/en-us/unreal-engine/gameplay-attributes-and-attribute-sets-for-the-gameplay-ability-system-in-unreal-engine</a></p>
+<blockquote>
+<p>*<code>FGameplayAttribute </code>*<em>describes a FGameplayAttributeData or float property inside an attribute set. Using this provides editor UI and helper functions</em></p>
+</blockquote>
+<p><code>Attribute</code><em>是由 FGameplayAttributeData定义的浮点值。 Attributes能够表达从角色的生命值到角色等级到药瓶的价格等任何数值</em></p>
+<h4 id="新版配置委托的实现"><a href="#新版配置委托的实现" class="headerlink" title="新版配置委托的实现"></a>新版配置委托的实现</h4><p>我们通过ASC去实现对属性的监听，然后再Controller里我们不再单独的广播一个属性，而是有属性修改的时候，委托就会触发，将变动的属性一并广播出去。</p>
+<p>在Widget里，我们可以监听对应的属性变化，委托的广播，不仅仅可以传递数值，也可以传递结构体。</p>
+<h5 id="设计思路"><a href="#设计思路" class="headerlink" title="设计思路"></a>设计思路</h5><ol>
+<li>新建一个<code>AttributeMenuWidgetController</code>实现对ASC广播的监听</li>
+<li>使用标签匹配的方式，实现对来自广播的数据的检索，知道去更新哪个属性（需要在C++和UE蓝图里都能获取）</li>
+<li>创建数据列表，获取到匹配的标签后，拿到对应的数据提交给widget</li>
+<li>在Widget里，根据标签更新数据</li>
+</ol>
+<p><img src="https://z1wnxhhnqil.feishu.cn/space/api/box/stream/download/asynccode/?code=MmU5YmQwZGYxYTY0ZWZiNDkzN2FiNjIwZjMyMjVmOTdfMmRoUWNNdkM5b0ZiRzNiUEQxNldqTWZoVGZBNGhYUEFfVG9rZW46SFhsRmJkUmZDbzNrbHh4YlBBN2NsMTdkbkZiXzE3MzE1OTA5MjQ6MTczMTU5NDUyNF9WNA" alt="img"></p>
+<h5 id="数据流"><a href="#数据流" class="headerlink" title="数据流"></a>数据流</h5><ol>
+<li>WidgetController，绑定从Ability System广播来的委托，当attribute变化时，widgetcontroller会知道<ol>
+<li>Set up to receive broadcasts from the ability system when attributes change</li>
+</ol>
+</li>
+<li>widgetcontroller通过这个attribute，找出对应的gameplaytag<ol>
+<li>Map attribute with gameplaytag</li>
+<li>fidn a way to reference these gameplay tags(找到一种引用标签的方法)<ol>
+<li><code>RequestGameplayTags(FName(&quot;xxx.xxx.xxx&quot;))</code>可以向gameplay tag manager查找tag</li>
+<li>每次都手写xxx.xxx.xxx太容易出错，转而用单例管理</li>
+</ol>
+</li>
+</ol>
+</li>
+<li>使用gameplaytag，在DataAsset(UAttributeInfo)里查找对应的结构体内容<ol>
+<li>DataAsset capable of receiving gameplay tags and returning our aura attribute info struct</li>
+</ol>
+</li>
+<li>将找到的内容发送给widget</li>
+</ol>
+<h5 id="具体实现："><a href="#具体实现：" class="headerlink" title="具体实现："></a>具体实现：</h5><ol>
+<li><h6 id="配置GameplayTags单例"><a href="#配置GameplayTags单例" class="headerlink" title="配置GameplayTags单例"></a>配置GameplayTags单例</h6><ol>
+<li><p>创建C++文件，继承自None</p>
+</li>
+<li><p>创建一个结构体类，将其作为单例，头文件中我们添加一个静态<code>Get</code>函数，用于从类直接获取单例。然后创建一个<code>InitializeNativeGameplayTags()</code>初始化内部的<code>Tag</code>标签，最后创建一个静态属性<code>FMyGameplayTags</code>用来存储单例，<code>Get</code>返回的就是他</p>
+<ol>
+<li><pre><code class="C++">#pragma once
+
+#include &quot;CoreMinimal.h&quot;
+#include &quot;GameplayTagContainer.h&quot;
+
+/**
+ * GameplayTags 标签 单例模式
+ * 内部包含原生的项目中使用的标签
+ */
+
+struct FMyGameplayTags
+&#123;
+public:
+        static const FMyGameplayTags&amp; Get() &#123; return GameplayTags; &#125;
+        static void InitializeNativeGameplayTags(); 
+        
+        FGameplayTag Attributes_Primary_Strength;
+        
+        FGameplayTag Attributes_Secondary_Armor;
+        
+        FGameplayTag InputTag_LMB;
+private:
+        static FMyGameplayTags GameplayTags;
+&#125;;
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">3. 先用`UGameplayTagsmanager::Get()`拿到游戏标签管理器的单例实例，然后添加一个原生的游戏标签。xxx.xxx.xxx对应表情管理器的层级，然后我们创建的`FGameplayTag Attributes_Primary_Strength;`存储创建出来的`Gameplaytags`，便于日后使用</span><br><span class="line"></span><br><span class="line">   1. ```C++</span><br><span class="line">      #include &quot;AuraGameplayTags.h&quot;</span><br><span class="line">      #include &quot;GameplayTagsManager.h&quot;</span><br><span class="line">      </span><br><span class="line">      // Create instance</span><br><span class="line">      FAuraGameplayTags FAuraGameplayTags::GameplayTags;</span><br><span class="line">      </span><br><span class="line">      // When we create a gameplay tag, it&#x27;s registered with the gameplay tag manager.</span><br><span class="line">      // This is an object in our project there&#x27;s only one of them, and it manages the gameplay tags and we can also use it to add gameplay tags even natively here in C++.</span><br><span class="line">      void FAuraGameplayTags::InitializeNativeGameplayTags()</span><br><span class="line">      &#123;</span><br><span class="line">          /*</span><br><span class="line">           * Primary Attributes</span><br><span class="line">           */</span><br><span class="line">          </span><br><span class="line">          // Associate the tag with actual gameplay tag variable</span><br><span class="line">          GameplayTags.Attributes_Primary_Strength = UGameplayTagsManager::Get().AddNativeGameplayTag(</span><br><span class="line">             FName(&quot;Attributes.Primary.Strength&quot;),</span><br><span class="line">             FString(&quot;Increases physical damage&quot;)</span><br><span class="line">             );</span><br><span class="line">             </span><br><span class="line">          /*</span><br><span class="line">           * Secondary Attributes</span><br><span class="line">           */</span><br><span class="line">          </span><br><span class="line">          GameplayTags.Attributes_Secondary_Armor = UGameplayTagsManager::Get().AddNativeGameplayTag(</span><br><span class="line">             FName(&quot;Attributes.Secondary.Armor&quot;),</span><br><span class="line">             FString(&quot;Reduces damage taken, improves Block Chance&quot;)</span><br><span class="line">             );</span><br><span class="line">      </span><br><span class="line">          /*</span><br><span class="line">           * Input Tags</span><br><span class="line">           */</span><br><span class="line">      </span><br><span class="line">          GameplayTags.InputTag_LMB = UGameplayTagsManager::Get().AddNativeGameplayTag(</span><br><span class="line">             FName(&quot;InputTag.LMB&quot;),</span><br><span class="line">             FString(&quot;Input Tag for Left Mouse Button&quot;)</span><br><span class="line">             );</span><br><span class="line">      &#125;</span><br></pre></td></tr></table></figure>
+</code></pre>
+</li>
+<li><pre><code class="C++">/**
+ * Registers the given name as a gameplay tag, and tracks that it is being directly referenced from code
+ * This can only be called during engine initialization, the table needs to be locked down before replication
+ *
+ * @param TagName The Name of the tag to add
+ * @param TagDevComment The developer comment clarifying the usage of the tag
+ * 
+ * @return Will return the corresponding FGameplayTag
+ */
+GAMEPLAYTAGS_API FGameplayTag AddNativeGameplayTag(FName TagName, const FString&amp; TagDevComment = TEXT(&quot;(Native)&quot;));
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">   4. XXXGameplayTags按照内容划分，应该归于资源类，那么应该放在什么时候初始化呢？考虑到这个原因，我们应该使用一个资源管理器，去统一的管理所有资源初始化、加载的逻辑（这里可以再去补充看一下Lyra的初始化链）</span><br><span class="line"></span><br><span class="line">1. ###### 实现资源管理器类</span><br><span class="line"></span><br><span class="line">   1. 新建一个C++文件，继承自`AssetManager`</span><br><span class="line"></span><br><span class="line">   2. 新建一个Get获取单例和初始化函数</span><br><span class="line"></span><br><span class="line">      1. ```C++</span><br><span class="line">         UCLASS()</span><br><span class="line">         class AURA_API UAuraAssetManager : public UAssetManager</span><br><span class="line">         &#123;</span><br><span class="line">             GENERATED_BODY()</span><br><span class="line">         public:</span><br><span class="line">             static UAuraAssetManager&amp; Get();</span><br><span class="line">         </span><br><span class="line">         protected:</span><br><span class="line">             virtual void StartInitialLoading() override;</span><br><span class="line">         &#125;;</span><br></pre></td></tr></table></figure>
+</code></pre>
+</li>
+<li><pre><code class="C++">UAuraAssetManager&amp; UAuraAssetManager::Get()
+&#123;
+    // 避免引擎还未完全初始化
+    check(GEngine);
+    
+    // 我们获取到的是引用(&amp;)，所以返回时需要加上*来返回实例
+    UAuraAssetManager* AuraAssetManager = Cast&lt;UAuraAssetManager&gt;(GEngine-&gt;AssetManager);
+    // 解引用，直接返回操作的对象而不是副本
+    return *AuraAssetManager;
+&#125;
+
+// 覆盖父类的StartInitialLoading()，在内部添加对自定义标签的处理
+void UAuraAssetManager::StartInitialLoading()
+&#123;
+    Super::StartInitialLoading();
+
+    // Initialize Native Gameplay Tags
+    FAuraGameplayTags::InitializeNativeGameplayTags();
+    // UAbilitySystemGlobals::Get().InitGlobalData(); // 不是这里的功能
+&#125;
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">   3. 将引擎默认的资源管理器替换为我们自定义的资源管理器，在Project Settings-&gt;General Settings-&gt;Default Classes-&gt;Advanced-&gt;Asset Manager Class设置</span><br><span class="line"></span><br><span class="line">   4. 打开Project Settings-&gt;Project-&gt;GameplayTags-&gt;Manage Gameplay Tags查看是否修改成功</span><br><span class="line"></span><br><span class="line">   5. 测试GameplayTags是否生效</span><br><span class="line"></span><br><span class="line">      1. 看的测试用例是在ASC触发的`AbilityActorInfoSet()`中添加，实际上就是查了一下是否能够调用GameplayTags以及读取的内容是否准确</span><br><span class="line"></span><br><span class="line">#### 存储UI所需要的数据</span><br><span class="line"></span><br><span class="line">&gt; ##### 为什么使用DataAsset而不是DataTable？</span><br><span class="line">&gt;</span><br><span class="line">&gt; 1. DataTable主要用于存储和读取数据，一般我们给策划配表的csv文件，直接导入就是DataTable。</span><br><span class="line">&gt; 2. DataAsset则是一种将资源整合在一起的方式，用于实现资源管理。通过DataAsset，可以将某个对象使用所有资源集中在一起，当需要加载该对象时，只需要加载对应的DataAsset。</span><br><span class="line">&gt; 3. DataAsset需要手动定义数据结构并添加引用的数据，且只存储引用并不加载。</span><br><span class="line"></span><br><span class="line">我们通过代码去修改DataAsset里的属性显示的实际的值</span><br><span class="line"></span><br><span class="line">##### 配置DataAsset</span><br><span class="line"></span><br><span class="line">1. 创建一个类，继承自DataAsset</span><br><span class="line"></span><br><span class="line">2. 创建DataAsset使用的结构体</span><br><span class="line"></span><br><span class="line">   1. `AttributeTag`，`AttributeName`，`AttributeDescription`是展示用的，不会实时修改，实际的属性数值`AttributeValue`我们会实时修改，所以添加的是`EditDefaultsOnly`属性</span><br><span class="line"></span><br><span class="line">   2. `AttributeInformation`我们用来在面板里添加和配置数据</span><br><span class="line"></span><br><span class="line">   3. `FindAttributeInfoForTag`实现通过`Gameplaytag`去获取`FAuraAttributeInfo`数据，最后我们要实现在C++侧修改数据，UI侧获取数据</span><br><span class="line"></span><br><span class="line">   4. ```C++</span><br><span class="line">      USTRUCT(BlueprintType)</span><br><span class="line">      struct FAuraAttributeInfo</span><br><span class="line">      &#123;</span><br><span class="line">          GENERATED_BODY()</span><br><span class="line">      </span><br><span class="line">          UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)</span><br><span class="line">          FGameplayTag AttributeTag = FGameplayTag();</span><br><span class="line">      </span><br><span class="line">          UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)</span><br><span class="line">          FText AttributeName = FText();</span><br><span class="line">      </span><br><span class="line">          UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)</span><br><span class="line">          FText AttributeDescription = FText();</span><br><span class="line">      </span><br><span class="line">          UPROPERTY(BlueprintReadOnly)</span><br><span class="line">          float AttributeValue = 0.f;</span><br><span class="line">      &#125;;</span><br><span class="line">      </span><br><span class="line">      UCLASS()</span><br><span class="line">      class AURA_API UAttributeInfo : public UDataAsset</span><br><span class="line">      &#123;</span><br><span class="line">          GENERATED_BODY()</span><br><span class="line">      public:</span><br><span class="line">          FAuraAttributeInfo FindAttributeInfoForTag(const FGameplayTag&amp; AttributeTag, bool bLogNotFound = false) const;</span><br><span class="line">          </span><br><span class="line">          UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (TitleProperty = &quot;AttributeName&quot;))</span><br><span class="line">          TArray&lt;FAuraAttributeInfo&gt; AttributeInformation;</span><br><span class="line">      &#125;;</span><br></pre></td></tr></table></figure>
+</code></pre>
+</li>
+</ol>
+</li>
+<li><pre><code class="C++">FAuraAttributeInfo UAttributeInfo::FindAttributeInfoForTag(const FGameplayTag&amp; AttributeTag, bool bLogNotFound) const
+&#123;
+    // 遍历配置的所有FAuraAttributeInfo
+    for (const FAuraAttributeInfo&amp; Info : AttributeInformation)
+    &#123;
+       // 如果有匹配的就返回结构体
+      if (Info.AttributeTag.MatchesTagExact(AttributeTag))
+      &#123;
+         return Info;
+      &#125;
+    &#125;
+
+    if (bLogNotFound)
+    &#123;
+       UE_LOG(LogTemp, Error, TEXT(&quot;Can&#39;t find Info for AttributeTag [%s] on AttributeInfo [%s].&quot;), *AttributeTag.ToString(), *GetNameSafe(this));
+    &#125;
+
+    return FAuraAttributeInfo();
+&#125;
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">3. 创建DataAsset，继承自我们创建的UAttributeInfo类，添加所需要的内容</span><br><span class="line"></span><br><span class="line">   1. ![img](https://z1wnxhhnqil.feishu.cn/space/api/box/stream/download/asynccode/?code=NDA0MWY0MDk2YTk5MjBlZWI1YjcwYWVkMzAwMWU1NzRfcEN1U0JxMHV5Z1JLMW41R1R0Y3pzVUdHNW9uTVN0eUdfVG9rZW46VkJRcmJKTWlhb1pDQkR4ekNxYmNqWmhjbmhlXzE3MzE1OTA5MjQ6MTczMTU5NDUyNF9WNA)</span><br><span class="line"></span><br><span class="line">#### 将数据同步到UI上</span><br><span class="line"></span><br><span class="line">&gt; 实现UI侧订阅数据，C++侧更新数据</span><br><span class="line"></span><br><span class="line">1. ##### `配置AttributeMenuWidgetController`</span><br><span class="line"></span><br><span class="line">   1. 覆盖一下父类的初始化属性函数和构建委托的函数，我们后续在这两个函数里实现对属性面板的广播</span><br><span class="line">   2. `AttributeInfoDelegate`设置了`BlueprintAssignable`修饰符，可以在蓝图里作为回调绑定使用</span><br><span class="line">   3. `AttributeInfo`使用`EditDefaultsOnly`，只能在UE面板上编辑</span><br><span class="line"></span><br><span class="line">   ```C++</span><br><span class="line">   UCLASS(BlueprintType, Blueprintable)</span><br><span class="line">   class AURA_API UAttributeMenuWidgetController : public UAuraWidgetController</span><br><span class="line">   &#123;</span><br><span class="line">       GENERATED_BODY()</span><br><span class="line">   public:</span><br><span class="line">       virtual void BindCallbacksToDependencies() override;</span><br><span class="line">       virtual void BroadcastInitialValues() override;</span><br><span class="line">   </span><br><span class="line">       UPROPERTY(BlueprintAssignable, Category = &quot;GAS|Attributes&quot;)</span><br><span class="line">       FAttributeInfoSignature AttributeInfoDelegate;,</span><br><span class="line">   protected:</span><br><span class="line">   </span><br><span class="line">       UPROPERTY(EditDefaultsOnly)</span><br><span class="line">       TObjectPtr&lt;UAttributeInfo&gt; AttributeInfo;</span><br><span class="line">   </span><br><span class="line">   private:</span><br><span class="line">       void BroadcastAttributeInfo(const FGameplayTag&amp; AttributeTag, const FGameplayAttribute&amp; Attribute) const;</span><br><span class="line">   &#125;;</span><br></pre></td></tr></table></figure>
+</code></pre>
+</li>
+</ol>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="type">void</span> <span class="title">UAttributeMenuWidgetController::BindCallbacksToDependencies</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    UAuraAttributeSet* AS = <span class="built_in">CastChecked</span>&lt;UAuraAttributeSet&gt;(AttributeSet);</span><br><span class="line">    <span class="built_in">check</span>(AttributeInfo)</span><br><span class="line"></span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">auto</span>&amp; Pair : AS-&gt;TagsToAttributes)</span><br><span class="line">    &#123;</span><br><span class="line">       <span class="comment">// Whatever we bind to this delegate needs the correct signature, the signature we need have to take a const reference to FOnAttributeChangeData</span></span><br><span class="line">       AbilitySystemComponent-&gt;<span class="built_in">GetGameplayAttributeValueChangeDelegate</span>(Pair.<span class="built_in">Value</span>()).<span class="built_in">AddLambda</span>(</span><br><span class="line">          [<span class="keyword">this</span>, Pair](<span class="type">const</span> FOnAttributeChangeData&amp; Data)</span><br><span class="line">          &#123;</span><br><span class="line">             <span class="built_in">BroadcastAttributeInfo</span>(Pair.Key, Pair.<span class="built_in">Value</span>());</span><br><span class="line">          &#125;</span><br><span class="line">       );</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="type">void</span> <span class="title">UAttributeMenuWidgetController::BroadcastInitialValues</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    UAuraAttributeSet* AS = <span class="built_in">CastChecked</span>&lt;UAuraAttributeSet&gt;(AttributeSet);</span><br><span class="line">    <span class="built_in">check</span>(AttributeInfo)</span><br><span class="line"></span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">auto</span>&amp; Pair : AS-&gt;TagsToAttributes)</span><br><span class="line">    &#123;</span><br><span class="line">       <span class="built_in">BroadcastAttributeInfo</span>(Pair.Key, Pair.<span class="built_in">Value</span>());</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="type">void</span> <span class="title">UAttributeMenuWidgetController::BroadcastAttributeInfo</span><span class="params">(<span class="type">const</span> FGameplayTag&amp; AttributeTag,</span></span></span><br><span class="line"><span class="params"><span class="function">    <span class="type">const</span> FGameplayAttribute&amp; Attribute)</span> <span class="type">const</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    FAuraAttributeInfo Info = AttributeInfo-&gt;<span class="built_in">FindAttributeInfoForTag</span>(AttributeTag);</span><br><span class="line">    Info.AttributeValue = Attribute.<span class="built_in">GetNumericValue</span>(AttributeSet);</span><br><span class="line">    AttributeInfoDelegate.<span class="built_in">Broadcast</span>(Info);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><h5 id="配置HUD类"><a href="#配置HUD类" class="headerlink" title="配置HUD类"></a>配置HUD类</h5><ol>
+<li><p>HUD类中，我们原先配置了创建<code>OverlayWidgetController</code>，用于进入游戏时，主界面<code>Health</code>和<code>Mana</code>的更新</p>
+</li>
+<li><p>现在要添加<code>AttributeMenuWidget</code>，自然要同步添加<code>AttributeMenuWidgetController</code></p>
+</li>
+<li><p>所以在HUD类里，我们就要创建一个承载该实例的变量，并添加一个获取方法</p>
+<ol>
+<li><pre><code class="C++">UAttributeMenuWidgetController* GetAttributeMenuWidgetController(const FWidgetControllerParams&amp; WCParams);
+UPROPERTY()
+TObjectPtr&lt;UAttributeMenuWidgetController&gt; AttributeMenuWidgetController;
+UPROPERTY(EditAnywhere)
+TSubclassOf&lt;UAttributeMenuWidgetController&gt; AttributeMenuWidgetControllerClass;
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">2. ```C++</span><br><span class="line">   UAttributeMenuWidgetController* AAuraHUD::GetAttributeMenuWidgetController(const FWidgetControllerParams&amp; WcParams)</span><br><span class="line">   &#123;</span><br><span class="line">       // 保证只实例化一次，后续Get的时候复用即可</span><br><span class="line">       if(AttributeMenuWidgetController == nullptr)</span><br><span class="line">       &#123;</span><br><span class="line">          AttributeMenuWidgetController = NewObject&lt;UAttributeMenuWidgetController&gt;(this, AttributeMenuWidgetControllerClass);</span><br><span class="line">          AttributeMenuWidgetController-&gt;SetWidgetControllerParams(WcParams);</span><br><span class="line">          AttributeMenuWidgetController-&gt;BindCallbacksToDependencies();</span><br><span class="line">       &#125;</span><br><span class="line">       return AttributeMenuWidgetController;</span><br><span class="line">   &#125;</span><br></pre></td></tr></table></figure>
+</code></pre>
+</li>
+</ol>
+</li>
+<li><p>创建一个基于<code>AttributeMenuWidgetController</code>的蓝图，让我们通过蓝图去设置<code>AttributeInfor</code>的数据</p>
+<ol>
+<li>将我们之前创建的DataAsset属性数据挂上去</li>
+<li>在HUD蓝图上配置好<code>AttributeMenuWidgetControllerClass</code></li>
+</ol>
+</li>
+<li><p>此时，在HUD初始化时，<code>OverlayWidgetControllerClass</code>（之前配置好的）和<code>AttributeMenuWidgetControllerClass</code>就都会被创建出来使用，接下来就是考虑如何在UI里去获得<code>WidgetController</code>，我们之前获取<code>OverlayWidgetController</code>是在创建UI的时候，在Widget事件里通过蓝图设置过去的，但是在属性面板里，层级太多，所以我们需要一个新的方式，能够在全局蓝图里获取<code>WidgetController</code></p>
+</li>
+</ol>
+</li>
+<li><h5 id="创建BlueprintFunctionLibrary"><a href="#创建BlueprintFunctionLibrary" class="headerlink" title="创建BlueprintFunctionLibrary"></a>创建BlueprintFunctionLibrary</h5><ol>
+<li><p>新建一个C++类继承自<code>BlueprintFunctionLibrary</code></p>
+</li>
+<li><p>创建两个静态函数，分别获取<code>OverlayWidgetController</code>和<code>AttributeMenuWidgetController</code>，使用<code>BlueprintPure</code>标记，这样我们可以直接拿到返回的结果</p>
+<ol>
+<li><p>A <code>BlueprintPure</code> function is shown as a node with no execution pin. By default functions marked <code>const</code> will be exposed as pure functions. To make a const function not a pure function, use <code>BlueprintPure=false</code>.</p>
+<p>Pure functions do not cache their results, so be careful when doing any non-trivial amount of work a blueprint pure function. It is good practice to avoid outputting array properties in blueprint pure functions.</p>
+<p><em>The function does not affect the owning object in any way and can be executed in a Blueprint or Level Blueprint graph.</em></p>
+<p><a target="_blank" rel="noopener" href="https://docs.unrealengine.com/4.26/en-US/ProgrammingAndScripting/GameplayArchitecture/Functions/">Unreal Documentation</a></p>
+<p>暂时无法在飞书文档外展示此内容</p>
+<p><img src="https://z1wnxhhnqil.feishu.cn/space/api/box/stream/download/asynccode/?code=N2Q1YmEwMjIzMDQyMWU5MjcyZjBjOGY1ZDY4NmI4ZGFfZExjZkc4WkdOeE5weExsSVZRZ0xFM1dsWG9KV2JkZktfVG9rZW46VHYzYWJGZDJ0b3J4bEV4NnNhWmNVSGRKbnRlXzE3MzE1OTA5MjQ6MTczMTU5NDUyNF9WNA" alt="img"></p>
+</li>
+<li><pre><code class="C++">UCLASS()
+class AURA_API UAuraAbilitySystemLibrary : public UBlueprintFunctionLibrary
+&#123;
+    GENERATED_BODY()
+public:
+
+    UFUNCTION(BlueprintPure, Category = &quot;AuraAbilitySystemLibrary|WidgetController&quot;)
+    static UOverlayWidgetController* GetOverlayWidgetController(const UObject* WorldContextObject);
+
+    UFUNCTION(BlueprintPure, Category = &quot;AuraAbilitySystemLibrary|WidgetController&quot;)
+    static UAttributeMenuWidgetController* GetAttributeMenuWidgetController(const UObject* WorldContextObject);
+&#125;;
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">3. 先从世界上下文对象中获取到本地的`PlayerController`，然后根据`PlayerController`获取到所需的配置项，再从HUD身上的函数获取`WidgetController`</span><br><span class="line"></span><br><span class="line">4. ```C++</span><br><span class="line">   UOverlayWidgetController* UAuraAbilitySystemLibrary::GetOverlayWidgetController(const UObject* WorldContextObject)</span><br><span class="line">   &#123;</span><br><span class="line">       // 获取到PlayerController，需要传入一个世界空间上下文的对象，用于得到对应世界中的PC列表，0就代表本地使用的PC</span><br><span class="line">       if (APlayerController* PC = UGameplayStatics::GetPlayerController(WorldContextObject, 0))</span><br><span class="line">       &#123;</span><br><span class="line">          // 从PlayerController，我们就能获取到HUD</span><br><span class="line">          if (AAuraHUD* AuraHUD = Cast&lt;AAuraHUD&gt;(PC-&gt;GetHUD()))</span><br><span class="line">          &#123;</span><br><span class="line">             AAuraPlayerState* PS = PC-&gt;GetPlayerState&lt;AAuraPlayerState&gt;();</span><br><span class="line">             UAbilitySystemComponent* ASC = PS-&gt;GetAbilitySystemComponent();</span><br><span class="line">             UAttributeSet* AS = PS-&gt;GetAttributeSet();</span><br><span class="line">             const FWidgetControllerParams WidgetControllerParams(PC, PS, ASC, AS);</span><br><span class="line">             return AuraHUD-&gt;GetOverlayWidgetController(WidgetControllerParams);</span><br><span class="line">          &#125;</span><br><span class="line">          return nullptr;</span><br><span class="line">       &#125;</span><br><span class="line">       return nullptr;</span><br><span class="line">   &#125;</span><br><span class="line">   </span><br><span class="line">   </span><br><span class="line">   /** </span><br><span class="line">    * Returns the player controller found while iterating through the local and available remote player controllers.</span><br><span class="line">    * On a network client, this will only include local players as remote player controllers are not available.</span><br><span class="line">    * The index will be consistent as long as no new players join or leave, but it will not be the same across different clients and servers.</span><br><span class="line">    *</span><br><span class="line">    * @param PlayerIndex   Index in the player controller list, starting first with local players and then available remote ones</span><br><span class="line">    */</span><br><span class="line">   UFUNCTION(BlueprintPure, Category=&quot;Game&quot;, meta=(WorldContext=&quot;WorldContextObject&quot;, UnsafeDuringActorConstruction=&quot;true&quot;))</span><br><span class="line">   static ENGINE_API class APlayerController* GetPlayerController(const UObject* WorldContextObject, int32 PlayerIndex);</span><br></pre></td></tr></table></figure>
+</code></pre>
+</li>
+</ol>
+</li>
+<li><p>这时候，我们就能在任意蓝图里调用<code>GetOverlayWidgetController</code>和<code>GetAttributeMenuWidgetController</code></p>
+<ol>
+<li><p><img src="https://z1wnxhhnqil.feishu.cn/space/api/box/stream/download/asynccode/?code=MTE1MDI2OGNlNWZiOTVkMmJlNzY0ZWFjYmI5MWE4ZTdfWUxGSlpPeVRIZmFmbTlFRlhDZ2Q1bW1lRGQyeEZPSnBfVG9rZW46WnY5cGJOTGtmb0NFQ2l4N3hkMmNUQ2tZblplXzE3MzE1OTA5MjQ6MTczMTU5NDUyNF9WNA" alt="img"></p>
+</li>
+<li><p>补充一点，我们在设置<code>OverlayWidgetController</code>的时候，是在C++里初始化UI属性时显示的</p>
+<p>暂时无法在飞书文档外展示此内容</p>
+<p>这里，我们先<code>OverlayWidget-&gt;SetWidgetController(WidgetController);</code>设置对应的<code>WidgetController</code>，然后再调用<code>WidgetControllerSet();</code>函数，这个函数在UI里设置各种事件</p>
+<p><img src="https://z1wnxhhnqil.feishu.cn/space/api/box/stream/download/asynccode/?code=ZGVhM2VmNjJlYjBlZjFiYzEyMzhlYWY2ZGY1YmYxYmRfdnFNZnFDUDJxMmFrVXJ0NHZUUVRyTXhWTkJFTEhoQ21fVG9rZW46WkFUQWJ0S2Zyb2hkZ3N4TGZNRWNIMnB6bmdnXzE3MzE1OTA5MjQ6MTczMTU5NDUyNF9WNA" alt="img"></p>
+<p><img src="https://z1wnxhhnqil.feishu.cn/space/api/box/stream/download/asynccode/?code=MmVlODNkYjI0YmE4MWE5YjgzMTcxMDNmNzNkOTA4NDNfZHlrRHlRS1JacmdKUTI0NlFrYVFSSHIyTlpRYUVxTHVfVG9rZW46UVR2dWJ1Q3FNb0dLQU94dWo5QWNxZmt1bnViXzE3MzE1OTA5MjQ6MTczMTU5NDUyNF9WNA" alt="img"></p>
+<p>然后设置<code>AttributeMenuController</code>，则是在点击按钮，<code>AttributeMenu</code>菜单初始化，<code>construct</code>的时候使用<code>SetWidgetController</code>设置的（见下图）</p>
+</li>
+</ol>
+</li>
+</ol>
+</li>
+<li><h5 id="广播数据，修改UI"><a href="#广播数据，修改UI" class="headerlink" title="广播数据，修改UI"></a>广播数据，修改UI</h5><ol>
+<li><p>打开AttributeMenu菜单时，会做一个Event Constuct操作</p>
+<ol>
+<li><img src="https://z1wnxhhnqil.feishu.cn/space/api/box/stream/download/asynccode/?code=ZTliZWU1MTBkOTdmMjVjM2VmNDA4NDcxMmI4ZDRkNTJfcDVBenU3SXg4dHJzU256N2JCMG9IMmp4aTB2R1YzUTlfVG9rZW46WDh3WGJoTXcxb1BxeGF4SU80dmNOMElLbnliXzE3MzE1OTA5MjQ6MTczMTU5NDUyNF9WNA" alt="img"></li>
+</ol>
+</li>
+<li><p>在最后一步，有<code>Broadcast Initial Values</code>操作来广播所有的数据，首先通过tag去获取对应的Attribute属性，例如StrengthTag就获得StrengthAttribute之类的，对应的Attribute属性其实就是我们在<code>AuraAttributeSet</code>里定义的</p>
+<ol>
+<li><pre><code class="C++">UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_Strength, Category = &quot;Primary Attributes&quot;)
+FGameplayAttributeData Strength;
+ATTRIBUTE_ACCESSORS(UAuraAttributeSet, Strength);
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">2.   然后我们就能够得到Attribute的值，并且广播出去</span><br><span class="line"></span><br><span class="line">3. ```C++</span><br><span class="line">   void UAttributeMenuWidgetController::BroadcastInitialValues()</span><br><span class="line">   &#123;</span><br><span class="line">       // 如何获取我们想要的AuraAttributeSet? 我们本身定义了一个AttributeSet变量(父类AuraWidgetController里定义，在设置Controller的时候应该传入了对应的基础AttributeSet)，直接Cast</span><br><span class="line">       UAuraAttributeSet* AS = CastChecked&lt;UAuraAttributeSet&gt;(AttributeSet);</span><br><span class="line">       check(AttributeInfo)</span><br><span class="line">   </span><br><span class="line">       for (auto&amp; Pair : AS-&gt;TagsToAttributes)</span><br><span class="line">       &#123;</span><br><span class="line">          BroadcastAttributeInfo(Pair.Key, Pair.Value());</span><br><span class="line">       &#125;</span><br><span class="line">   &#125;</span><br><span class="line">   </span><br><span class="line">   void UAttributeMenuWidgetController::BroadcastAttributeInfo(const FGameplayTag&amp; AttributeTag,</span><br><span class="line">       const FGameplayAttribute&amp; Attribute) const</span><br><span class="line">   &#123;</span><br><span class="line">       // 通过tag找到attributeinfo这个DataAsset里存储的属性数据</span><br><span class="line">       FAuraAttributeInfo Info = AttributeInfo-&gt;FindAttributeInfoForTag(AttributeTag);</span><br><span class="line">       </span><br><span class="line">       /*</span><br><span class="line">           别忘了，FGameplayAttribute是用来描述FGameplayAttributeData的，Data里面就包含属性的各种数据，如基础值、当前值、最大值</span><br><span class="line">           </span><br><span class="line">           // Returns the current value of an attribute </span><br><span class="line">           float GetNumericValue(const UAttributeSet* Src) const;     </span><br><span class="line">       */</span><br><span class="line">       Info.AttributeValue = Attribute.GetNumericValue(AttributeSet);</span><br><span class="line">       AttributeInfoDelegate.Broadcast(Info);</span><br><span class="line">   &#125;</span><br><span class="line">   </span><br><span class="line">   void UAttributeMenuWidgetController::BindCallbacksToDependencies()</span><br><span class="line">   &#123;</span><br><span class="line">       UAuraAttributeSet* AS = CastChecked&lt;UAuraAttributeSet&gt;(AttributeSet);</span><br><span class="line">       check(AttributeInfo)</span><br><span class="line">   </span><br><span class="line">       for (auto&amp; Pair : AS-&gt;TagsToAttributes)</span><br><span class="line">       &#123;</span><br><span class="line">          // Whatever we bind to this delegate needs the correct signature, the signature we need have to take a const reference to FOnAttributeChangeData</span><br><span class="line">          AbilitySystemComponent-&gt;GetGameplayAttributeValueChangeDelegate(Pair.Value()).AddLambda(</span><br><span class="line">             [this, Pair](const FOnAttributeChangeData&amp; Data)</span><br><span class="line">             &#123;</span><br><span class="line">                BroadcastAttributeInfo(Pair.Key, Pair.Value());</span><br><span class="line">             &#125;</span><br><span class="line">          );</span><br><span class="line">       &#125;</span><br><span class="line">   &#125;</span><br><span class="line">   </span><br><span class="line">   // UAttributeSet示例</span><br><span class="line">   UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_Strength, Category = &quot;Primary Attributes&quot;)</span><br><span class="line">   FGameplayAttributeData Strength;</span><br><span class="line">   ATTRIBUTE_ACCESSORS(UAuraAttributeSet, Strength);</span><br></pre></td></tr></table></figure>
+</code></pre>
+</li>
+<li><p>这里其实还有一个旧版</p>
+<ol>
+<li><pre><code class="C++">void UAttributeMenuWidgetController::BroadcastInitialValues()
+&#123;
+    // 如何获取我们想要的AuraAttributeSet? 我们本身定义了一个AttributeSet变量(父类AuraWidgetController里定义，在设置Controller的时候应该传入了对应的基础AttributeSet)，直接Cast
+    UAuraAttributeSet* AS = CastChecked&lt;UAuraAttributeSet&gt;(AttributeSet);
+    check(AttributeInfo)
+    
+    // 每个attribute都用一个FindAttributeInfoForTag去查找
+    FAuraAtributeInfo StrengthInfo = AttributeInfo-&gt;FindAttributeInfoForTag(FAuraGameplayTags::Get().Attributes_Primarty_Strength);
+    // Attribute标记的特性，自动封装了Get操作
+    StrengthInfo.AttributeValue = AS-&gt;GetStrength();
+    AttributeInfoDelegate.Broadcast(StrengthInfo);
+    
+    // 每一个Attribute都需要设置对应的标签查找
+    FAuraAtributeInfo IntelligenceInfo = AttributeInfo-&gt;FindAttributeInfoForTag(FAuraGameplayTags::Get().Attributes_Primarty_Intelligence);
+    IntelligenceInfo.AttributeValue = AS-&gt;GetIntelligence();
+    AttributeInfoDelegate.Broadcast(IntelligenceInfo);
+&#125;
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">5. 再补充说一下，TagsToAttributes的实现</span><br><span class="line"></span><br><span class="line">   1. 首先，是为了解决旧版每次设置Attribute都需要手写对应的标签查找出现的</span><br><span class="line"></span><br><span class="line">   2. 所以，我们会存储一个map，传入tags就能找到对应的Attribute</span><br><span class="line"></span><br><span class="line">      1. ```C++</span><br><span class="line">         /* </span><br><span class="line">             C++11后，typedef就改成using了，都是一个功能，为现有类型创建别名</span><br><span class="line">             在这个例子中，using创建一个别名TStaticFuncPtr，它表示 TBaseStaticDelegateInstance 类模板的一个特定成员类型 FFuncPtr。</span><br><span class="line">             实现效果就是：</span><br><span class="line">                接受一个类型参数 T，并将其转换为 TBaseStaticDelegateInstance&lt;T, FDefaultDelegateUserPolicy&gt;::FFuncPtr 类型</span><br><span class="line">            </span><br><span class="line">             TBaseStaticDelegateInstance 是一个类模板，用于创建静态委托实例。它通常用于处理函数指针或成员函数指针。</span><br><span class="line">             FDefaultDelegateUserPolicy 是一个策略类，用于定义委托的行为。</span><br><span class="line">         */</span><br><span class="line">         template&lt;class T&gt;</span><br><span class="line">         using TStaticFuncPtr = typename TBaseStaticDelegateInstance&lt;T, FDefaultDelegateUserPolicy&gt;::FFuncPtr;</span><br><span class="line">         </span><br><span class="line">         /*</span><br><span class="line">             StaticFuncPtr&lt;FGameplayAttribute()&gt; 表示一个返回 FGameplayAttribute 类型且没有输入参数的函数指针</span><br><span class="line">             TagsToAttributes 是一个映射，将 FGameplayTag 映射到一个返回 FGameplayAttribute 的函数指针</span><br><span class="line">         */</span><br><span class="line">         TMap&lt;FGameplayTag, TStaticFuncPtr&lt;FGameplayAttribute()&gt;&gt; TagsToAttributes;</span><br></pre></td></tr></table></figure>
+</code></pre>
+</li>
+<li><p>这之后，我们再在AttributeSet初始化的时候，为TagsToAttributes添加对应的map</p>
+<ol>
+<li><pre><code class="C++">/* Primary Attributes */
+// Associate Tags to Attributes
+TagsToAttributes.Add(GameplayTags.Attributes_Primary_Strength, GetStrengthAttribute);
+
+/* Secondary Attributes */
+TagsToAttributes.Add(GameplayTags.Attributes_Secondary_Armor, GetArmorAttribute);
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">4. 然后，这种TagsToAttribute也有旧实现方式</span><br><span class="line"></span><br><span class="line">   1. 1</span><br><span class="line"></span><br><span class="line">   2. ```C++</span><br><span class="line">      /*</span><br><span class="line">          DECLARE_DELEGATE_RetVal宏代表是一个带有返回值的委托</span><br><span class="line">          FGameplayAttributes是返回的类型</span><br><span class="line">          FAttributeSignature是委托的名称</span><br><span class="line">          </span><br><span class="line">          该委托可以绑定一个不接收任何参数的函数，然后返回FGameplayAttribute</span><br><span class="line">      */</span><br><span class="line">      DECLARE_DELEGATE_RetVal(FGameplayAttribute, FAttributeSignature);</span><br><span class="line">      </span><br><span class="line">      // 定义Map</span><br><span class="line">      TMap&lt;FGameplayTag, FAttributeSignature&gt; TagsToAttributes;</span><br><span class="line">      </span><br><span class="line">      // 在初始化时为Map添加值</span><br><span class="line">      UAuraAttributeSet::UAuraAttributeSet()</span><br><span class="line">      &#123;</span><br><span class="line">          const FAuraGameplayTags&amp; GameplayTags = FAuraGameplayTags::Get();</span><br><span class="line">          </span><br><span class="line">          // UAuraAttributeSet::GetStrengthAttribute 是一个静态成员函数，因此使用 BindStatic</span><br><span class="line">          FAttributeSignature StrengthDelegate;</span><br><span class="line">          StrengthDelegate.BindStatic(UAuraAttributeSet::GetStrengthAttribute);</span><br><span class="line">          TagsToAttributes.Add(GameplayTags.Attributes_Primary_Strength, StrengthDelegate);</span><br><span class="line">      &#125;</span><br><span class="line">      </span><br><span class="line">      // 获取AttributeValue的时候要用Execute()，触发绑定的函数</span><br><span class="line">      FGameplayAttribute Attribute = xxx.Value.Execute();</span><br></pre></td></tr></table></figure>
+</code></pre>
+</li>
+</ol>
+</li>
+</ol>
+</li>
+</ol>
+</li>
+<li><p>UI菜单上对应的位置绑定对应的标签，实现对于数据的监听</p>
+<ol>
+<li>这里的AttributeTag是我们自定义的变量，到时候在WBP_Attribute里去设置对应属性的tag</li>
+<li><img src="https://z1wnxhhnqil.feishu.cn/space/api/box/stream/download/asynccode/?code=Mjk5ODkxZmUxMTk3Y2ExYTljZjhhOGJmNGIwZDM3MDlfZjVWNG8yRVJ6MURqMGIzanFWZkVFSm1UQzU0OUl5aEVfVG9rZW46VEZFUWJUSjg0b3JlUWd4NVBFY2NlSU5zbk5kXzE3MzE1OTA5MjQ6MTczMTU5NDUyNF9WNA" alt="img"></li>
+</ol>
+</li>
+<li><p>通过Attribute tag设置值</p>
+<ol>
+<li>了解显示的结构<ol>
+<li>在AttributeMenu菜单，知道每行都是继承自WBP_TextValueRow的，后面带按钮的也是先继承自WBP_TextValueButtonRow，再继承自WBP_TextValueRow<ol>
+<li><img src="https://z1wnxhhnqil.feishu.cn/space/api/box/stream/download/asynccode/?code=OTViODczZGU4ZGM2N2I2NGUyYzQ1NTkzNmNlNmY4YWJfQklwa3phVVhIUFlFb2N6U1d0YkZRZ05rWlFhTjk0QUdfVG9rZW46QVVVcmJEckFob3BWVWV4c1hHWWNma2w2bmtiXzE3MzE1OTA5MjQ6MTczMTU5NDUyNF9WNA" alt="img"></li>
+</ol>
+</li>
+<li>设置对应的值<ol>
+<li><img src="https://z1wnxhhnqil.feishu.cn/space/api/box/stream/download/asynccode/?code=NDVhNzQwMzI0ZTJhMzgyYTE0ODBkYTI4Y2JkNDhmNDFfNm5vVkEwR2tEVTFQVVFNV2xicnBwQWVoVk9yUTJ0TlFfVG9rZW46Tk5nV2JKSWtnb1NGdk54c3V2cGNiaDBWbnFiXzE3MzE1OTA5MjQ6MTczMTU5NDUyNF9WNA" alt="img"></li>
+<li><img src="https://z1wnxhhnqil.feishu.cn/space/api/box/stream/download/asynccode/?code=ZDk2YzYyYWJjYmI4ZDY5NjRkYjc4Yjg5M2M0NDFkZTBfclZ0M21VYTlvSzFWbE5pcG9Nc3poRTdveDF3bWhJbmdfVG9rZW46S3FvTWJCcWNlb2J3QUp4YldQMGNjdXFnbkRjXzE3MzE1OTA5MjQ6MTczMTU5NDUyNF9WNA" alt="img"><img src="https://z1wnxhhnqil.feishu.cn/space/api/box/stream/download/asynccode/?code=YzE5MWQ1YjBjNmMxZGEzMjI1ZDQxMTJhYzMyOWY4MWFfNlhXWlpSWFFySHNQQ2xyRnlaT3ZLMnpkV0hqaHdZWnlfVG9rZW46UVNNYWJxMHJ4b1JqMTZ4OWVxNGNXY0FSbm9mXzE3MzE1OTA5MjQ6MTczMTU5NDUyNF9WNA" alt="img"></li>
+<li></li>
+</ol>
+</li>
+<li>展示一下完整的结构，了解上面的变量中WBP_FrameValue和TextBlockLabel都对应着什么，一个是对应数值框模版，一个是对应着前面的标题Text<ol>
+<li><img src="https://z1wnxhhnqil.feishu.cn/space/api/box/stream/download/asynccode/?code=Njk0MDM1YmU1OThjOTMxMWFmZmYwZTA3ZWRjMTVjODJfdHZHQ1JSMGRQbW9oQTM0dFpqNGhWVzNCbkNUTGdWU2pfVG9rZW46RXhSWGIxOFVCb2hsbFN4ZW5YNWNDWnFLbmVjXzE3MzE1OTA5MjQ6MTczMTU5NDUyNF9WNA" alt="img"></li>
+<li><img src="https://z1wnxhhnqil.feishu.cn/space/api/box/stream/download/asynccode/?code=ZTdjNTk2MDNlYjViOWE3YTI5NDkxN2UxMzg3ZTZjZjBfTXo1YnhiNGNDMUJDOW9ES2NFaEN4SGg0QTRMVVZ2Q1hfVG9rZW46VDk2cGJ4U2JDb0VLZ2R4RkhiSGNpbUowbm5PXzE3MzE1OTA5MjQ6MTczMTU5NDUyNF9WNA" alt="img"></li>
+</ol>
+</li>
+</ol>
+</li>
+<li>我们发现，每行的数值都是和标签绑定的，只要Attribute Info发出消息，没啊很难过都根据自己的标签去更新对应的内容，但是在哪里给每行设置其标签呢？<ol>
+<li><img src="https://z1wnxhhnqil.feishu.cn/space/api/box/stream/download/asynccode/?code=MWYzNjZkYmQwNzhiMWRiNjFiZDc5ZmU0YzE5OGU3NjVfNTVycXpqOHpjVGJzNThadVJCRnF6STBEV0pzNkVNT2dfVG9rZW46UERVUGJIU01Yb0ZYV014dHpVbmN4UUl1blhiXzE3MzE1OTA5MjQ6MTczMTU5NDUyNF9WNA" alt="img"></li>
+<li><img src="https://z1wnxhhnqil.feishu.cn/space/api/box/stream/download/asynccode/?code=NzIyMWE4NjM2NGNjY2VmMGJmNjdiMjJlNGU1NTYxODdfM0lHQXNXSENvRzU2SXBVNG9rT0l2aDkyT3p5bU5NWkZfVG9rZW46RU83OGJuMTNKbzhmUTl4WWNIMmNZUlc5bjhnXzE3MzE1OTA5MjQ6MTczMTU5NDUyNF9WNA" alt="img"></li>
+<li><img src="https://z1wnxhhnqil.feishu.cn/space/api/box/stream/download/asynccode/?code=YjUwMTZhZGI3NzgyMTg5ZDMwNzc5MDk4NDExYmI1ZjlfTWNiRkE0b1RCMXE1czQxeDdHOWlLTXZuUm04aVJqbWRfVG9rZW46UVZtWGJkY2JMb2Z5MEJ4TGZHeGNHMEZlblNnXzE3MzE1OTA5MjQ6MTczMTU5NDUyNF9WNA" alt="img"></li>
+<li>这些RowStrength变量，就是对应的UI</li>
+<li><img src="https://z1wnxhhnqil.feishu.cn/space/api/box/stream/download/asynccode/?code=YmE4NDIxYTE2MDhjYjM0NjgyNTdkMmI4OTc4MDg5NjNfaDB0RU5GeGY0eWt4WUtaZ016TDVVSTlSamJUNkdqRnVfVG9rZW46SVlDcGJWUWljb1dFcmN4b2QySWNTV3I4bkxmXzE3MzE1OTA5MjQ6MTczMTU5NDUyNF9WNA" alt="img"></li>
+<li><img src="https://z1wnxhhnqil.feishu.cn/space/api/box/stream/download/asynccode/?code=NzdjNjZjOTlhN2Y4YTU5MzU3ZTU5ZmI2Njg0ZGJiOWRfVFZhTGE0bmNXUm9Da003R25SdlZSQjFUOVdrU2d0QkxfVG9rZW46UUJZbmJ1a0c0bzJBQWl4cGFWY2N3RmR2bktnXzE3MzE1OTA5MjQ6MTczMTU5NDUyNF9WNA" alt="img"></li>
+</ol>
+</li>
+<li></li>
+<li></li>
+</ol>
+</li>
+</ol>
+</li>
+</ol>
+</article><div class="tag_share"></div></div><div class="aside-content" id="aside-content"><div class="card-widget card-info text-center"><div class="avatar-img"><img src="/img/avatar.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info-name">Damue</div><div class="author-info-description">记录一些生成的垃圾</div><div class="site-data"><a href="/archives/"><div class="headline">文章</div><div class="length-num">2</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">0</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">0</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/Damue01"><i class="fab fa-github"></i><span>Follow Me</span></a></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#UI%E5%B1%9E%E6%80%A7%E7%BB%91%E5%AE%9A"><span class="toc-number">1.</span> <span class="toc-text">UI属性绑定</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%AE%9E%E7%8E%B0%E6%80%9D%E8%B7%AF"><span class="toc-number">1.1.</span> <span class="toc-text">实现思路</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%97%A7%E7%89%88%E9%85%8D%E7%BD%AE%E5%A7%94%E6%89%98%E7%9A%84%E5%AE%9E%E7%8E%B0"><span class="toc-number">1.2.</span> <span class="toc-text">旧版配置委托的实现</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#GameplayAttribute"><span class="toc-number">1.2.1.</span> <span class="toc-text">GameplayAttribute</span></a></li></ol></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%96%B0%E7%89%88%E9%85%8D%E7%BD%AE%E5%A7%94%E6%89%98%E7%9A%84%E5%AE%9E%E7%8E%B0"><span class="toc-number">1.3.</span> <span class="toc-text">新版配置委托的实现</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#%E8%AE%BE%E8%AE%A1%E6%80%9D%E8%B7%AF"><span class="toc-number">1.3.1.</span> <span class="toc-text">设计思路</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#%E6%95%B0%E6%8D%AE%E6%B5%81"><span class="toc-number">1.3.2.</span> <span class="toc-text">数据流</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#%E5%85%B7%E4%BD%93%E5%AE%9E%E7%8E%B0%EF%BC%9A"><span class="toc-number">1.3.3.</span> <span class="toc-text">具体实现：</span></a><ol class="toc-child"><li class="toc-item toc-level-6"><a class="toc-link" href="#%E9%85%8D%E7%BD%AEGameplayTags%E5%8D%95%E4%BE%8B"><span class="toc-number">1.3.3.1.</span> <span class="toc-text">配置GameplayTags单例</span></a></li></ol></li><li class="toc-item toc-level-5"><a class="toc-link" href="#%E9%85%8D%E7%BD%AEHUD%E7%B1%BB"><span class="toc-number">1.3.4.</span> <span class="toc-text">配置HUD类</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#%E5%88%9B%E5%BB%BABlueprintFunctionLibrary"><span class="toc-number">1.3.5.</span> <span class="toc-text">创建BlueprintFunctionLibrary</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#%E5%B9%BF%E6%92%AD%E6%95%B0%E6%8D%AE%EF%BC%8C%E4%BF%AE%E6%94%B9UI"><span class="toc-number">1.3.6.</span> <span class="toc-text">广播数据，修改UI</span></a></li></ol></li></ol></li></ol></div></div></div></div></main><footer id="footer" style="background-image: url(https://api.paugram.com/wallpaper/);"><div id="footer-wrap"><div class="copyright">&copy;2024 By Damue</div><div class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly</a></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="日间和夜间模式切换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><script>(() => {
+  const panguFn = () => {
+    if (typeof pangu === 'object') pangu.autoSpacingPage()
+    else {
+      btf.getScript('https://cdn.jsdelivr.net/npm/pangu/dist/browser/pangu.min.js')
+        .then(() => {
+          pangu.autoSpacingPage()
+        })
+    }
+  }
+
+  const panguInit = () => {
+    if (false){
+      GLOBAL_CONFIG_SITE.isPost && panguFn()
+    } else {
+      panguFn()
+    }
+  }
+
+  btf.addGlobalFn('pjaxComplete', panguInit, 'pangu')
+  document.addEventListener('DOMContentLoaded', panguInit)
+})()</script><div class="js-pjax"><script>(async () => {
+  const showKatex = () => {
+    document.querySelectorAll('#article-container .katex').forEach(el => el.classList.add('katex-show'))
+  }
+
+  if (!window.katex_js_css) {
+    window.katex_js_css = true
+    await btf.getCSS('https://cdn.jsdelivr.net/npm/katex/dist/katex.min.css')
+    if (false) {
+      await btf.getScript('https://cdn.jsdelivr.net/npm/katex/dist/contrib/copy-tex.min.js')
+    }
+  }
+
+  showKatex()
+})()</script></div><script id="canvas_nest" defer="defer" color="0,0,255" opacity="0.7" zIndex="-1" count="99" mobile="false" src="https://cdn.jsdelivr.net/npm/butterfly-extsrc/dist/canvas-nest.min.js"></script><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div></body></html>

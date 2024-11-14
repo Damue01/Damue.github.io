@@ -1,0 +1,444 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>GAS简易介绍 | 小禾苗の垃圾堆</title><meta name="author" content="Damue"><meta name="copyright" content="Damue"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="GAS调研 GAS学习成本是否超过收益？ GAS主要还是用于大型联机项目的技能系统，与当前项目并不是很匹配，但是设计思想是非常好的。如果自己重新按照设计思想去设计一个框架，对比起GAS以及后续可能出现的需求，是否具有更好的性价比呢？  为什么要用GAS？  可以实现带有消耗和冷却功能的技能 处理数值属性（等级、攻击力、防御力） 应用状态效果（烟花、眩晕） 应用游戏标签（GameplayTags管理">
+<meta property="og:type" content="article">
+<meta property="og:title" content="GAS简易介绍">
+<meta property="og:url" content="https://damue01.github.io/2024/11/10/GAS%E4%BB%8B%E7%BB%8D/index.html">
+<meta property="og:site_name" content="小禾苗の垃圾堆">
+<meta property="og:description" content="GAS调研 GAS学习成本是否超过收益？ GAS主要还是用于大型联机项目的技能系统，与当前项目并不是很匹配，但是设计思想是非常好的。如果自己重新按照设计思想去设计一个框架，对比起GAS以及后续可能出现的需求，是否具有更好的性价比呢？  为什么要用GAS？  可以实现带有消耗和冷却功能的技能 处理数值属性（等级、攻击力、防御力） 应用状态效果（烟花、眩晕） 应用游戏标签（GameplayTags管理">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://damue01.github.io/img/avatar.jpg">
+<meta property="article:published_time" content="2024-11-10T08:56:53.111Z">
+<meta property="article:modified_time" content="2024-11-14T13:27:59.449Z">
+<meta property="article:author" content="Damue">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://damue01.github.io/img/avatar.jpg"><link rel="shortcut icon" href="/img/icon.gif"><link rel="canonical" href="https://damue01.github.io/2024/11/10/GAS%E4%BB%8B%E7%BB%8D/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css"><script>
+    (() => {
+      
+    const saveToLocal = {
+      set: (key, value, ttl) => {
+        if (!ttl) return
+        const expiry = Date.now() + ttl * 86400000
+        localStorage.setItem(key, JSON.stringify({ value, expiry }))
+      },
+      get: key => {
+        const itemStr = localStorage.getItem(key)
+        if (!itemStr) return undefined
+        const { value, expiry } = JSON.parse(itemStr)
+        if (Date.now() > expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return value
+      }
+    }
+
+    window.btf = {
+      saveToLocal,
+      getScript: (url, attr = {}) => new Promise((resolve, reject) => {
+        const script = document.createElement('script')
+        script.src = url
+        script.async = true
+        Object.entries(attr).forEach(([key, val]) => script.setAttribute(key, val))
+        script.onload = script.onreadystatechange = () => {
+          if (!script.readyState || /loaded|complete/.test(script.readyState)) resolve()
+        }
+        script.onerror = reject
+        document.head.appendChild(script)
+      }),
+      getCSS: (url, id) => new Promise((resolve, reject) => {
+        const link = document.createElement('link')
+        link.rel = 'stylesheet'
+        link.href = url
+        if (id) link.id = id
+        link.onload = link.onreadystatechange = () => {
+          if (!link.readyState || /loaded|complete/.test(link.readyState)) resolve()
+        }
+        link.onerror = reject
+        document.head.appendChild(link)
+      }),
+      addGlobalFn: (key, fn, name = false, parent = window) => {
+        if (!false && key.startsWith('pjax')) return
+        const globalFn = parent.globalFn || {}
+        globalFn[key] = globalFn[key] || {}
+        if (name && globalFn[key][name]) return
+        globalFn[key][name || Object.keys(globalFn[key]).length] = fn
+        parent.globalFn = globalFn
+      }
+    }
+  
+      
+      const activateDarkMode = () => {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      const activateLightMode = () => {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+
+      btf.activateDarkMode = activateDarkMode
+      btf.activateLightMode = activateLightMode
+
+      const theme = saveToLocal.get('theme')
+    
+          theme === 'dark' ? activateDarkMode() : theme === 'light' ? activateLightMode() : null
+        
+      
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        document.documentElement.classList.toggle('hide-aside', asideStatus === 'hide')
+      }
+    
+      
+    const detectApple = () => {
+      if (/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)) {
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+  
+    })()
+  </script><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: undefined,
+  translate: undefined,
+  noticeOutdate: undefined,
+  highlight: {"plugin":"highlight.js","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false,"highlightFullpage":false,"highlightMacStyle":false},
+  copy: {
+    success: '复制成功',
+    error: '复制失败',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: true
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'null',
+  Snackbar: undefined,
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid/dist/infinitegrid.min.js',
+    buttonText: '加载更多'
+  },
+  isPhotoFigcaption: false,
+  islazyload: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: true,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: 'GAS简易介绍',
+  isPost: true,
+  isHome: false,
+  isHighlightShrink: false,
+  isToc: true,
+  postUpdate: '2024-11-14 21:27:59'
+}</script><meta name="generator" content="Hexo 7.3.0"></head><body><div id="loading-box" onclick="document.getElementById(&quot;loading-box&quot;).classList.add(&quot;loaded&quot;)"><div class="loading-bg"><div class="loading-img"></div><div class="loading-image-dot"></div></div></div><script>const preloader = {
+  endLoading: () => {
+    document.body.style.overflow = 'auto';
+    document.getElementById('loading-box').classList.add("loaded")
+  },
+  initLoading: () => {
+    document.body.style.overflow = '';
+    document.getElementById('loading-box').classList.remove("loaded")
+
+  }
+}
+window.addEventListener('load',()=> { preloader.endLoading() })
+
+if (false) {
+  document.addEventListener('pjax:send', () => { preloader.initLoading() })
+  document.addEventListener('pjax:complete', () => { preloader.endLoading() })
+}</script><div class="post" id="body-wrap"><header class="post-bg" id="page-header" style="background-image: url(https://api.paugram.com/wallpaper/);"><nav id="nav"><span id="blog-info"><a class="nav-site-title" href="/"><span class="site-name">小禾苗の垃圾堆</span></a><a class="nav-page-title" href="/"><span class="site-name">GAS简易介绍</span></a></span><div id="menus"></div></nav><div id="post-info"><h1 class="post-title">GAS简易介绍</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2024-11-10T08:56:53.111Z" title="发表于 2024-11-10 16:56:53">2024-11-10</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2024-11-14T13:27:59.449Z" title="更新于 2024-11-14 21:27:59">2024-11-14</time></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-wordcount"><i class="far fa-file-word fa-fw post-meta-icon"></i><span class="post-meta-label">总字数:</span><span class="word-count">2k</span><span class="post-meta-separator">|</span><i class="far fa-clock fa-fw post-meta-icon"></i><span class="post-meta-label">阅读时长:</span><span>7分钟</span></span><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title=""><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">浏览量:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="post-content" id="article-container"><h3 id="GAS调研"><a href="#GAS调研" class="headerlink" title="GAS调研"></a>GAS调研</h3><blockquote>
+<p>GAS学习成本是否超过收益？</p>
+<p>GAS主要还是用于大型联机项目的技能系统，与当前项目并不是很匹配，但是设计思想是非常好的。如果自己重新按照设计思想去设计一个框架，对比起GAS以及后续可能出现的需求，是否具有更好的性价比呢？</p>
+</blockquote>
+<p>为什么要用GAS？</p>
+<ul>
+<li>可以实现带有消耗和冷却功能的技能</li>
+<li>处理数值属性（等级、攻击力、防御力）</li>
+<li>应用状态效果（烟花、眩晕）</li>
+<li>应用游戏标签（GameplayTags管理）</li>
+<li>特效和音效</li>
+<li>网络复制和预测</li>
+</ul>
+<p>适合用GAS的项目</p>
+<ul>
+<li>C++项目，对GAS有足够的了解，多读源码</li>
+<li>使用Dedicated Server的，或者之前没有自己做服务器框架，局域网联机也能用的</li>
+<li>有复杂的技能逻辑设计需求</li>
+</ul>
+<blockquote>
+<p>The plugin provides an out-of-the-box solution in single and multiplayer games for:</p>
+<ul>
+<li>Implementing level-based character abilities or skills with optional costs and cooldowns (GameplayAbilities)</li>
+<li>Manipulating numerical Attributes belonging to actors (Attributes)</li>
+<li>Applying status effects to actors (GameplayEffects)</li>
+<li>Applying GameplayTags to actors (GameplayTags)</li>
+<li>Spawning visual or sound effects (GameplayCues)</li>
+<li>Replication of everything mentioned above</li>
+</ul>
+</blockquote>
+<p><strong>先读代码、再做开发。</strong> </p>
+<p>个人经验：框架灵活度越高，设计耗费的精力越多越复杂；灵活性低的就是逻辑开发了，需要再次解耦</p>
+<p>GAS中各模块个人理解：</p>
+<ul>
+<li><p>UAbilitySystemComponent - ASC</p>
+</li>
+<li><p>UGameplayAbility - GA，角色可以执行的事情都能用GA，移动和UI不要用GA</p>
+</li>
+<li><p>FGameplayAttribute - Attribute，一般会设置当前等级、最高等级，然后添加宏定义，就能满足各种需求了，实际上是在ASC init时加载父类的时候会判断是否存在AttributeSet</p>
+</li>
+<li><p>FGameplayTag - Tag， 还是像管理用的，方便做树状图</p>
+</li>
+<li><p>UGameplayEffect - GE，做所有的数值结算，对自己或他人产生影响，可以根据GameplayTags去配置触发哪个技能，阻塞哪些技能，这些技能可能就是一个操作，挥个拳之类的。GE本身也有等级，我们可以根据CurveTable去配置不同等级触发的效果</p>
+</li>
+<li><p>UGameplayTask - Task 异步操作, eg: 技能里播放一个蒙太奇，结束后再结束该技能</p>
+</li>
+<li><p>UGameplayCueNotify - GC</p>
+</li>
+<li><p>FGameplayEventData - Event</p>
+</li>
+<li><p>Who:谁能放技能？AbilitySystemComponent，只有挂载ASC模块的Actor才能放技能，一般联机或者死亡要保留数据的就把他挂载在PlayerState</p>
+</li>
+<li><p>How:技能的逻辑？GameplayAbility，编写技能逻辑</p>
+</li>
+<li><p>Change:技能的效果？GameplayEffect，技能效果、改变了什么</p>
+</li>
+<li><p>What:技能改变的属性？GamePlayAttribute，属性设置</p>
+</li>
+<li><p>If:技能涉及的条件？GameplayTag，组合查询</p>
+</li>
+<li><p>Visual:技能的视效？GameplayCue，看起来是什么样</p>
+</li>
+<li><p>Async:技能的长时行动？GameplayTask</p>
+</li>
+<li><p>Send:技能消息事件？GamePlayEvent，技能之间互相发送</p>
+</li>
+</ul>
+<p>Actor通信的一种方式</p>
+<p><img src="https://z1wnxhhnqil.feishu.cn/space/api/box/stream/download/asynccode/?code=OWNjYmNmMjA0ZTBiZmU5NGIxOGY3YjkzMTNhZGEwMzJfS0ZOWnhYYjNmZnBjOFNkOWVGdzBSanlTMVJrbDd3d2VfVG9rZW46Qkg4Q2JzT1Rrb2lKUDl4MWYwR2NFUktLbjZMXzE3MzE1OTA4MTM6MTczMTU5NDQxM19WNA" alt="img"></p>
+<p>技能触发执行流程</p>
+<p><img src="https://z1wnxhhnqil.feishu.cn/space/api/box/stream/download/asynccode/?code=MmUyNDgxNDE5YWJiNTBjMzBmYzJiYzJiM2YxMTQxZjZfSnNXZkFLaHNiWTNxQ0pFZDhmR3poVlF6NFRJUzMzT1JfVG9rZW46UVpNQmJYcE5EbzNGS2R4b0xZV2NQTFRxblpjXzE3MzE1OTA4MTM6MTczMTU5NDQxM19WNA" alt="img"></p>
+<p>复盘时的几点疑惑：</p>
+<ol>
+<li>查找为什么不用GameplayTags标签系统？</li>
+</ol>
+<p>TODO: 将当前的消息系统改为GameplayTags去管理</p>
+<ol>
+<li>学习的课程中有相当一部分篇幅在讲解GAS中多人联机时的设计方案，与当前项目并不匹配，应该根据需要丢弃一部分内容。</li>
+</ol>
+<p>TODO: 丢弃哪一部分，丢弃后如何根据需求维持原有的框架功能完整，需要进一步考虑</p>
+<h3 id="GAS-简易流程"><a href="#GAS-简易流程" class="headerlink" title="GAS 简易流程"></a>GAS 简易流程</h3><h4 id="Gameplay-Abilities"><a href="#Gameplay-Abilities" class="headerlink" title="Gameplay Abilities"></a>Gameplay Abilities</h4><ol>
+<li>为角色添加AbilitySystem</li>
+<li>创建GA蓝图，继承自Gameplay Ability，在里面实现能力<ol>
+<li>Event ActivateAbility，激活时就会触发</li>
+<li>GA里获得character用Get Avatar Actor from Actor Info</li>
+<li>最后别忘了End Ability</li>
+</ol>
+</li>
+<li>角色蓝图中，别忘了Give Ability<ol>
+<li>用添加的AbilitySystem，调用Give Ability节点，激活对应的Ability Class&#x2F;xx&#x2F;xx</li>
+</ol>
+</li>
+<li>在该实现功能的地方，调用Try Activate Ability&#x2F; by Class&#x2F; by Tag<ol>
+<li>使用Get player character去调用Get Ability System Component（因为挂载到了角色身上）</li>
+</ol>
+</li>
+</ol>
+<h4 id="Gameplay-Tags"><a href="#Gameplay-Tags" class="headerlink" title="Gameplay Tags"></a>Gameplay Tags</h4><ol>
+<li>先去Project Settings-&gt;Project-&gt;GameplayTags-&gt;Manage Gameplay Tags新建tag</li>
+<li>打开GA蓝图，查看Class Default(Stimulation，运行按钮边上)，可以看到Tags列表</li>
+<li>Ability Tags是添加的标签，其他的是标签Rules，最简单操作就是只添加一个标签</li>
+<li>激活能力的地方改为Try Activate Abilities by Tag（最推荐的方法），传入tag就用Make Literal Gameplay Tag Container</li>
+</ol>
+<h4 id="Gameplay-Effects"><a href="#Gameplay-Effects" class="headerlink" title="Gameplay Effects"></a>Gameplay Effects</h4><blockquote>
+<p>They can modify attributes grant, activate abilities, add or remove gameplay tags</p>
+</blockquote>
+<ol>
+<li>先去创建一个Tag</li>
+<li>创建新蓝图，继承自Gameplay Effect</li>
+<li>配置效果Details面板，以着火为例  （这一块更新了很多，用的时候看一下源码）<ol>
+<li>设置Duration Policy为Has Duration</li>
+<li>设置Magnitude Calculation Type为Scalable Float，值为5</li>
+<li>设置Target Tags(Granted to Actor)为Target Tags Gameplay Effect Component (Actually grants the tags to the actor that has the gameplay effect)</li>
+<li>设置Added里的标签</li>
+</ol>
+</li>
+<li>将着火效果应用到应该激活的目标上<ol>
+<li>想要使用Ability System的物体自身必须带有一个Ability System Component</li>
+<li>获取目标物体的Ability System Component</li>
+<li>调用ApplyGameplayEffectToSelf，配置传入的GE Class等参数，可以使用Effect Content实现高级效果</li>
+</ol>
+</li>
+</ol>
+<blockquote>
+<p><strong>Modifier Magnitude（修改值）</strong></p>
+<p>修改值方面，GE提供了4种方式：</p>
+<ul>
+<li>ScalableFloat：写死一个浮点值。最简单的方式，不用多说。</li>
+<li>AttributeBase：基于属性值算出一个值。（看到这我惊了，功能真特么强大）<ul>
+<li>取一个属性Attribute</li>
+<li>可选属性来自Source还是Target。</li>
+<li>可选是取BaseValue，还是CurrentValue，还是CurrentValue-BaseValue的变化值。</li>
+<li>可选是否快照，快照会抓取GE添加时刻的属性值，不快照的话则会跟着变。</li>
+<li>用这个属性，按照（Value+PreMultiplyAdditiveValue）*Coeffcient+PostMultiplyAdditiveValue得出最终值，这三个值是可配的。</li>
+<li>这里的参数和属性，可以配置一个曲线表格，但我还没研究明白怎么玩。</li>
+</ul>
+</li>
+<li>CustomCalculationClass：适用于更加复杂灵活的修改，你需要创建一个ModifierMagnitudeCalculation（MMC）类，在其中计算出一个Float，然后通过Pre&#x2F;Post&#x2F;Coeffcient进一步修改。这个MMC类可以做很多奇怪的事情，或者说很多依赖Buff的奇怪的东西都适合写在这。</li>
+<li>SetByCaller：这种方式，是在GE的Spec创建之后，再由Ability传入一个值，例如技能的蓄力时间越长，伤害越高。使用起来比较麻烦，在这里不做介绍。</li>
+</ul>
+</blockquote>
+<h4 id="Gameplay-Cues"><a href="#Gameplay-Cues" class="headerlink" title="Gameplay Cues"></a>Gameplay Cues</h4><blockquote>
+<p>Gameplay cues are essentially auditory and visual cues that can automatically added to a scene，理解成游戏表现、游戏效果</p>
+</blockquote>
+<ol>
+<li>新建一个蓝图，继承自GameplayCueNotify_Actor</li>
+<li>设置效果，以粒子效果为例<ol>
+<li>添加一个Niagara Component</li>
+<li>配置对应的Niagara效果</li>
+<li>在Gameplay Cue Tag 里新建tag（used to link our gameplay effect to this queue)</li>
+<li>如果要绑定，别忘了设置Auto Attach to Owner</li>
+</ol>
+</li>
+<li>GE蓝图里，可以设置Gameplay Cues选项了<ol>
+<li>将刚创建的tag传入Gameplay Cue Tags</li>
+</ol>
+</li>
+</ol>
+<h4 id="Gameplay-AttributesSet"><a href="#Gameplay-AttributesSet" class="headerlink" title="Gameplay AttributesSet"></a>Gameplay AttributesSet</h4><blockquote>
+<p>Just float alues that are stored on gameplay ability system components to keep track of things like health、mana</p>
+</blockquote>
+<ol>
+<li><p>创建一个C++类，继承自AttributeSet（现在只能在C++中定义）</p>
+</li>
+<li><p>对照UE官方Attribute Set手册配置基础内容</p>
+<ol>
+<li><p><a target="_blank" rel="noopener" href="https://dev.epicgames.com/community/learning/tutorials/zrEb/unreal-engine-how-to-create-attribute-sets-using-unreal-gameplay-ability-system">https://dev.epicgames.com/community/learning/tutorials/zrEb/unreal-engine-how-to-create-attribute-sets-using-unreal-gameplay-ability-system</a></p>
+</li>
+<li><pre><code class="C++">#pragma once
+#include &quot;AttributeSet.h&quot;
+#include &quot;AbilitySystemComponent.h&quot;
+#include &quot;QuodHealthAttributeSet.generated.h&quot;
+
+// 定义便于使用的宏
+// Helper macro to define the accessors for an attribute
+#define ATTRIBUTE_ACCESSORS(ClassName, PropertyName) \
+GAMEPLAYATTRIBUTE_PROPERTY_GETTER(ClassName, PropertyName) \
+GAMEPLAYATTRIBUTE_VALUE_GETTER(PropertyName) \
+GAMEPLAYATTRIBUTE_VALUE_SETTER(PropertyName) \
+GAMEPLAYATTRIBUTE_VALUE_INITTER(PropertyName)
+
+// Used to hold information about the health of our actors
+UCLASS()
+class UQuodHealthAttributeSet : public UAttributeSet
+&#123;
+        GENERATED_BODY()
+
+public:
+        // Current health of the owner
+        UPROPERTY()
+        FGameplayAttributeData Health = 100.0f;
+        ATTRIBUTE_ACCESSORS(UQuodHealthAttributeSet, Health)
+
+        // Max health that the owner can have
+        UPROPERTY(EditAnywhere, BlueprintReadOnly)
+        FGameplayAttributeData MaxHealth= 100.0f;
+        ATTRIBUTE_ACCESSORS(UQuodHealthAttributeSet, MaxHealth)
+        // Internally what this macro will do is create setters and getters for us so working with the attribute becomes easier.
+&#125;;
+</code></pre>
+</li>
+</ol>
+</li>
+<li><p>构建DataTable</p>
+<ol>
+<li>Row Structure选择AttributeMetaData</li>
+<li>RowName按照UQuodHealthAttributeSet.Health这样命名</li>
+<li>初始化数值，设置BaseValue为100</li>
+</ol>
+</li>
+<li><p>去对应的蓝图配置属性（需要的都可以配置）</p>
+<ol>
+<li>在AbilitySystemComponent中配置Attribute Test</li>
+<li>在Default Starting Data添加元素</li>
+<li>Attributes设置UQuodHealthAttributeSet</li>
+<li>Default Starting Table设置刚刚新建的Datatable</li>
+</ol>
+</li>
+<li><p>回到GE</p>
+<ol>
+<li>设置Modifiers属性</li>
+<li>设置Attribute为刚刚创建的属性UQuodHealthAttributeSet.Health</li>
+<li>配置Modifier Op是增加、减少还是其他变化去影响这个属性</li>
+<li>GE也可以在Period设置期间持续的变化</li>
+</ol>
+</li>
+<li><p>查看对应的属性可以用Get Gameplay Attribute Value</p>
+</li>
+</ol>
+<h4 id="Gameplay-Events"><a href="#Gameplay-Events" class="headerlink" title="Gameplay Events"></a>Gameplay Events</h4><blockquote>
+<p>Just messages that you can send to inform actors specifically that have ability system component</p>
+</blockquote>
+<ol>
+<li>发送消息<ol>
+<li>调用Send Gameplay Event to Actor (消息发送给谁）</li>
+<li>可以用Make GameplayEvventData传参给上面节点的Payload</li>
+</ol>
+</li>
+<li>接收消息<ol>
+<li>初始化时</li>
+</ol>
+</li>
+</ol>
+</article><div class="tag_share"></div></div><div class="aside-content" id="aside-content"><div class="card-widget card-info text-center"><div class="avatar-img"><img src="/img/avatar.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info-name">Damue</div><div class="author-info-description">记录一些生成的垃圾</div><div class="site-data"><a href="/archives/"><div class="headline">文章</div><div class="length-num">2</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">0</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">0</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/Damue01"><i class="fab fa-github"></i><span>Follow Me</span></a></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#GAS%E8%B0%83%E7%A0%94"><span class="toc-number">1.</span> <span class="toc-text">GAS调研</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#GAS-%E7%AE%80%E6%98%93%E6%B5%81%E7%A8%8B"><span class="toc-number">2.</span> <span class="toc-text">GAS 简易流程</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#Gameplay-Abilities"><span class="toc-number">2.1.</span> <span class="toc-text">Gameplay Abilities</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Gameplay-Tags"><span class="toc-number">2.2.</span> <span class="toc-text">Gameplay Tags</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Gameplay-Effects"><span class="toc-number">2.3.</span> <span class="toc-text">Gameplay Effects</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Gameplay-Cues"><span class="toc-number">2.4.</span> <span class="toc-text">Gameplay Cues</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Gameplay-AttributesSet"><span class="toc-number">2.5.</span> <span class="toc-text">Gameplay AttributesSet</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Gameplay-Events"><span class="toc-number">2.6.</span> <span class="toc-text">Gameplay Events</span></a></li></ol></li></ol></div></div></div></div></main><footer id="footer" style="background-image: url(https://api.paugram.com/wallpaper/);"><div id="footer-wrap"><div class="copyright">&copy;2024 By Damue</div><div class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly</a></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="日间和夜间模式切换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><script>(() => {
+  const panguFn = () => {
+    if (typeof pangu === 'object') pangu.autoSpacingPage()
+    else {
+      btf.getScript('https://cdn.jsdelivr.net/npm/pangu/dist/browser/pangu.min.js')
+        .then(() => {
+          pangu.autoSpacingPage()
+        })
+    }
+  }
+
+  const panguInit = () => {
+    if (false){
+      GLOBAL_CONFIG_SITE.isPost && panguFn()
+    } else {
+      panguFn()
+    }
+  }
+
+  btf.addGlobalFn('pjaxComplete', panguInit, 'pangu')
+  document.addEventListener('DOMContentLoaded', panguInit)
+})()</script><div class="js-pjax"><script>(async () => {
+  const showKatex = () => {
+    document.querySelectorAll('#article-container .katex').forEach(el => el.classList.add('katex-show'))
+  }
+
+  if (!window.katex_js_css) {
+    window.katex_js_css = true
+    await btf.getCSS('https://cdn.jsdelivr.net/npm/katex/dist/katex.min.css')
+    if (false) {
+      await btf.getScript('https://cdn.jsdelivr.net/npm/katex/dist/contrib/copy-tex.min.js')
+    }
+  }
+
+  showKatex()
+})()</script></div><script id="canvas_nest" defer="defer" color="0,0,255" opacity="0.7" zIndex="-1" count="99" mobile="false" src="https://cdn.jsdelivr.net/npm/butterfly-extsrc/dist/canvas-nest.min.js"></script><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div></body></html>
