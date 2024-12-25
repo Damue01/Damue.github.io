@@ -1,190 +1,511 @@
-<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>小禾苗の垃圾堆</title><meta name="author" content="Damue"><meta name="copyright" content="Damue"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="记录一些生成的垃圾">
-<meta property="og:type" content="website">
-<meta property="og:title" content="小禾苗の垃圾堆">
-<meta property="og:url" content="https://damue01.github.io/index.html">
-<meta property="og:site_name" content="小禾苗の垃圾堆">
-<meta property="og:description" content="记录一些生成的垃圾">
-<meta property="og:locale" content="zh_CN">
-<meta property="og:image" content="https://damue01.github.io/img/avatar.jpg">
-<meta property="article:author" content="Damue">
-<meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="https://damue01.github.io/img/avatar.jpg"><link rel="shortcut icon" href="/img/icon.gif"><link rel="canonical" href="https://damue01.github.io/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css"><script>
-    (() => {
-      
-    const saveToLocal = {
-      set: (key, value, ttl) => {
-        if (!ttl) return
-        const expiry = Date.now() + ttl * 86400000
-        localStorage.setItem(key, JSON.stringify({ value, expiry }))
-      },
-      get: key => {
-        const itemStr = localStorage.getItem(key)
-        if (!itemStr) return undefined
-        const { value, expiry } = JSON.parse(itemStr)
-        if (Date.now() > expiry) {
-          localStorage.removeItem(key)
-          return undefined
-        }
-        return value
-      }
-    }
-
-    window.btf = {
-      saveToLocal,
-      getScript: (url, attr = {}) => new Promise((resolve, reject) => {
-        const script = document.createElement('script')
-        script.src = url
-        script.async = true
-        Object.entries(attr).forEach(([key, val]) => script.setAttribute(key, val))
-        script.onload = script.onreadystatechange = () => {
-          if (!script.readyState || /loaded|complete/.test(script.readyState)) resolve()
-        }
-        script.onerror = reject
-        document.head.appendChild(script)
-      }),
-      getCSS: (url, id) => new Promise((resolve, reject) => {
-        const link = document.createElement('link')
-        link.rel = 'stylesheet'
-        link.href = url
-        if (id) link.id = id
-        link.onload = link.onreadystatechange = () => {
-          if (!link.readyState || /loaded|complete/.test(link.readyState)) resolve()
-        }
-        link.onerror = reject
-        document.head.appendChild(link)
-      }),
-      addGlobalFn: (key, fn, name = false, parent = window) => {
-        if (!false && key.startsWith('pjax')) return
-        const globalFn = parent.globalFn || {}
-        globalFn[key] = globalFn[key] || {}
-        if (name && globalFn[key][name]) return
-        globalFn[key][name || Object.keys(globalFn[key]).length] = fn
-        parent.globalFn = globalFn
-      }
-    }
+<!DOCTYPE html>
+<html lang="zh-CN">
+    <head prefix="og: https://ogp.me/ns#">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
   
-      
-      const activateDarkMode = () => {
-        document.documentElement.setAttribute('data-theme', 'dark')
-        if (document.querySelector('meta[name="theme-color"]') !== null) {
-          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
-        }
-      }
-      const activateLightMode = () => {
-        document.documentElement.setAttribute('data-theme', 'light')
-        if (document.querySelector('meta[name="theme-color"]') !== null) {
-          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
-        }
-      }
+  <title>小禾苗の垃圾堆</title>
+  
+    <link rel="shortcut icon" href="/favicon.png">
+  
+  
+    <link rel='manifest' href='/manifest.json'>
+  
 
-      btf.activateDarkMode = activateDarkMode
-      btf.activateLightMode = activateLightMode
+  
+  
+  
+  <meta property="og:title" content="小禾苗の垃圾堆" />
+  
+  <meta property="og:type" content="website" />
+  
+  <meta property="og:url" content="https://damue01.github.io/index.html" />
+  
+  <meta property="og:image" content="/favicon.png" />
+  
+  
 
-      const theme = saveToLocal.get('theme')
-    
-          theme === 'dark' ? activateDarkMode() : theme === 'light' ? activateLightMode() : null
+  
+<link rel="stylesheet" href="/css/var.css">
+
+  
+<link rel="stylesheet" href="/css/main.css">
+
+  
+<link rel="stylesheet" href="/css/typography.css">
+
+  
+<link rel="stylesheet" href="/css/code-highlighting.css">
+
+  
+<link rel="stylesheet" href="/css/components.css">
+
+  
+<link rel="stylesheet" href="/css/nav.css">
+
+  
+<link rel="stylesheet" href="/css/paginator.css">
+
+  
+<link rel="stylesheet" href="/css/footer.css">
+
+  
+<link rel="stylesheet" href="/css/post-list.css">
+
+  
+  
+<link rel="stylesheet" href="/css/rainbow-banner.css">
+
+  
+  
+  
+<link rel="stylesheet" href="/css/toc.css">
+
+  
+  
+  
+  
+<link rel="stylesheet" href="/css/index.css">
+
+  
+  
+  
+  
+  
+  
+
+  
+<meta name="generator" content="Hexo 7.3.0"></head>
+    <body
+        data-color-scheme="auto"
+        data-uppercase-categories="true"
         
-      
-      const asideStatus = saveToLocal.get('aside-status')
-      if (asideStatus !== undefined) {
-        document.documentElement.classList.toggle('hide-aside', asideStatus === 'hide')
-      }
-    
-      
-    const detectApple = () => {
-      if (/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)) {
-        document.documentElement.classList.add('apple')
-      }
-    }
-    detectApple()
-  
-    })()
-  </script><script>const GLOBAL_CONFIG = {
-  root: '/',
-  algolia: undefined,
-  localSearch: undefined,
-  translate: undefined,
-  noticeOutdate: undefined,
-  highlight: {"plugin":"highlight.js","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false,"highlightFullpage":false,"highlightMacStyle":false},
-  copy: {
-    success: '复制成功',
-    error: '复制失败',
-    noSupport: '浏览器不支持'
-  },
-  relativeDate: {
-    homepage: false,
-    post: true
-  },
-  runtime: '',
-  dateSuffix: {
-    just: '刚刚',
-    min: '分钟前',
-    hour: '小时前',
-    day: '天前',
-    month: '个月前'
-  },
-  copyright: undefined,
-  lightbox: 'null',
-  Snackbar: undefined,
-  infinitegrid: {
-    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid/dist/infinitegrid.min.js',
-    buttonText: '加载更多'
-  },
-  isPhotoFigcaption: false,
-  islazyload: false,
-  isAnchor: false,
-  percent: {
-    toc: true,
-    rightside: true,
-  },
-  autoDarkmode: false
-}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
-  title: '小禾苗の垃圾堆',
-  isPost: false,
-  isHome: true,
-  isHighlightShrink: false,
-  isToc: false,
-  postUpdate: '2024-12-05 20:39:00'
-}</script><meta name="generator" content="Hexo 7.3.0"></head><body><div class="page" id="body-wrap"><header class="full_page" id="page-header" style="background-image: url(https://api.paugram.com/wallpaper/);"><nav id="nav"><span id="blog-info"><a class="nav-site-title" href="/"><span class="site-name">小禾苗の垃圾堆</span></a></span><div id="menus"></div></nav><div id="site-info"><h1 id="site-title">小禾苗の垃圾堆</h1></div><div id="scroll-down"><i class="fas fa-angle-down scroll-down-effects"></i></div></header><main class="layout" id="content-inner"><div class="recent-posts nc" id="recent-posts"><div class="recent-post-items"><div class="recent-post-item"><div class="recent-post-info no-cover"><a class="article-title" href="/2024/12/05/UE_AnimationSystem/" title="UE_AnimationSystem">UE_AnimationSystem</a><div class="article-meta-wrap"><span class="post-meta-date"><i class="far fa-calendar-alt"></i><span class="article-meta-label">发表于</span><time datetime="2024-12-05T12:31:13.000Z" title="发表于 2024-12-05 20:31:13">2024-12-05</time></span></div><div class="content">UE动画系统介绍</div></div></div><div class="recent-post-item"><div class="recent-post-info no-cover"><a class="article-title" href="/2024/12/05/GAS_GameplayEffect/" title="GAS GameplayEffect">GAS GameplayEffect</a><div class="article-meta-wrap"><span class="post-meta-date"><i class="far fa-calendar-alt"></i><span class="article-meta-label">发表于</span><time datetime="2024-12-05T11:13:16.067Z" title="发表于 2024-12-05 19:13:16">2024-12-05</time></span></div><div class="content">GAS GameplayEffect初始化 我们在AuraCharacter里初始化了角色信息， InitAbilityActorInfo里有个InitializeDefaultAttributes()操作，这个操作在AuraCharacterBase里定义，具体代码为:  1234567// 这个函数是对角色设置了Primary、Secondary、Vital属性的默认值void AAuraCharacterBase::InitializeDefaultAttributes() const&#123;ApplyEffectToSelf(DefaultPrimaryAttributes, 1.f);ApplyEffectToSelf(DefaultSecondaryAttributes, 1.f);ApplyEffectToSelf(DefaultVitalAttributes, 1.f);&#125;  敌人属性初始化在AuraEnemy里的InitAbilityActorInfo，同样是调用父类的InitializeDefaultAttributes()，具体代码为: ...</div></div></div><div class="recent-post-item"><div class="recent-post-info no-cover"><a class="article-title" href="/2024/12/05/LUA_Logic/" title="Lua_Logic">Lua_Logic</a><div class="article-meta-wrap"><span class="post-meta-date"><i class="far fa-calendar-alt"></i><span class="article-meta-label">发表于</span><time datetime="2024-12-05T11:13:15.796Z" title="发表于 2024-12-05 19:13:15">2024-12-05</time></span></div><div class="content">LuaLua初始化模块开发逻辑（以UI调用Lua逻辑为例） 在Idol_BlueprintFunctionLibrary.h里，我们有定义OnGenericEvent函数  1234567891011UFUNCTION(BlueprintCallable, Category = &quot;Idol|UI&quot;)static void OnGenericEvent(UWidget* widget, const FString&amp; luaFunction);void UUIdol_UIBlueprintFunctionLibrary::OnGenericEvent(UWidget* widget, const FString&amp; luaFunction)  &#123;      NSIdol::NSClient::LuaVariable variable(          NSIdol::NSClient::NSLua::IAPI::Get()-&gt;queryInterface_ILuaState(),          ...</div></div></div><div class="recent-post-item"><div class="recent-post-info no-cover"><a class="article-title" href="/2024/12/05/UE_Learning/" title="UE_Learning">UE_Learning</a><div class="article-meta-wrap"><span class="post-meta-date"><i class="far fa-calendar-alt"></i><span class="article-meta-label">发表于</span><time datetime="2024-12-05T07:02:44.000Z" title="发表于 2024-12-05 15:02:44">2024-12-05</time></span></div><div class="content">UE学习笔记</div></div></div><div class="recent-post-item"><div class="recent-post-info no-cover"><a class="article-title" href="/2024/12/03/Python/" title="Python">Python</a><div class="article-meta-wrap"><span class="post-meta-date"><i class="far fa-calendar-alt"></i><span class="article-meta-label">发表于</span><time datetime="2024-12-03T07:25:00.000Z" title="发表于 2024-12-03 15:25:00">2024-12-03</time></span></div><div class="content">Python简单介绍</div></div></div><div class="recent-post-item"><div class="recent-post-info no-cover"><a class="article-title" href="/2024/11/22/C_Basic/" title="C++Basic">C++Basic</a><div class="article-meta-wrap"><span class="post-meta-date"><i class="far fa-calendar-alt"></i><span class="article-meta-label">发表于</span><time datetime="2024-11-22T06:32:29.000Z" title="发表于 2024-11-22 14:32:29">2024-11-22</time></span></div><div class="content">C++ 基础知识点、八股和个人使用经验</div></div></div><div class="recent-post-item"><div class="recent-post-info no-cover"><a class="article-title" href="/2024/11/22/Singleton/" title="Singleton">Singleton</a><div class="article-meta-wrap"><span class="post-meta-date"><i class="far fa-calendar-alt"></i><span class="article-meta-label">发表于</span><time datetime="2024-11-22T03:07:15.000Z" title="发表于 2024-11-22 11:07:15">2024-11-22</time></span></div><div class="content">Singleton</div></div></div><div class="recent-post-item"><div class="recent-post-info no-cover"><a class="article-title" href="/2024/11/21/Lua/" title="Lua">Lua</a><div class="article-meta-wrap"><span class="post-meta-date"><i class="far fa-calendar-alt"></i><span class="article-meta-label">发表于</span><time datetime="2024-11-21T15:33:56.025Z" title="发表于 2024-11-21 23:33:56">2024-11-21</time></span></div><div class="content">Lua初探Lua简单介绍Lua可以做动态下发，如果我们用C++写功能，那么每次更新都只能发新的大版本，但是Lua可以作为资产下发，也就是说玩家可以直接在系统内更新，简单点讲就是做热更新 UI操作_createWidget()中，创建UI 12local item_data = Idol.CUtility.CreateListViewItemData(function(widget, dataObj, userData) end, userData);  定义带.的就是static UI上，如果有灵活变化background的需求，可以考虑直接放置一个canvas，然后选用不同的User Widget，这样子可以变化各种形状之类的 1234567891011121314151617181920212223242526272829303132333435363738394041424344454647484950515253545556575859606162636465666768697071727374-- for i = 1, row do--   --...</div></div></div><div class="recent-post-item"><div class="recent-post-info no-cover"><a class="article-title" href="/2024/11/20/umg/" title="UMG初探">UMG初探</a><div class="article-meta-wrap"><span class="post-meta-date"><i class="far fa-calendar-alt"></i><span class="article-meta-label">发表于</span><time datetime="2024-11-20T03:50:17.000Z" title="发表于 2024-11-20 11:50:17">2024-11-20</time></span></div><div class="content">简单介绍一下UMG</div></div></div><div class="recent-post-item"><div class="recent-post-info no-cover"><a class="article-title" href="/2024/11/15/GAS_Modules/" title="GAS 初探">GAS 初探</a><div class="article-meta-wrap"><span class="post-meta-date"><i class="far fa-calendar-alt"></i><span class="article-meta-label">发表于</span><time datetime="2024-11-14T17:15:18.000Z" title="发表于 2024-11-15 01:15:18">2024-11-15</time></span></div><div class="content">简单介绍一下GAS中常见的模块</div></div></div></div><nav id="pagination"><div class="pagination"><span class="page-number current">1</span><a class="page-number" href="/page/2/#content-inner">2</a><a class="extend next" rel="next" href="/page/2/#content-inner"><i class="fas fa-chevron-right fa-fw"></i></a></div></nav></div><div class="aside-content" id="aside-content"><div class="card-widget card-info text-center"><div class="avatar-img"><img src="/img/avatar.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info-name">Damue</div><div class="author-info-description">记录一些生成的垃圾</div><div class="site-data"><a href="/archives/"><div class="headline">文章</div><div class="length-num">11</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">7</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">3</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/Damue01"><i class="fab fa-github"></i><span>Follow Me</span></a></div><div class="sticky_layout"><div class="card-widget card-tags"><div class="item-headline"><i class="fas fa-tags"></i><span>标签</span></div><div class="card-tag-cloud"><a href="/tags/GAS/" style="font-size: 1.3em; color: #99a1ac">GAS</a> <a href="/tags/UI/" style="font-size: 1.1em; color: #999">UI</a> <a href="/tags/Python/" style="font-size: 1.1em; color: #999">Python</a> <a href="/tags/C/" style="font-size: 1.1em; color: #999">C++</a> <a href="/tags/Lua/" style="font-size: 1.1em; color: #999">Lua</a> <a href="/tags/UMG/" style="font-size: 1.1em; color: #999">UMG</a> <a href="/tags/UE/" style="font-size: 1.5em; color: #99a9bf">UE</a></div></div><div class="card-widget card-archives">
-    <div class="item-headline">
-      <i class="fas fa-archive"></i>
-      <span>归档</span>
-      
+        data-rainbow-banner="true"
+        data-rainbow-banner-shown="auto"
+        data-rainbow-banner-month="6"
+        data-rainbow-banner-colors="#e50000,#ff8d00,#ffee00,#008121,#004cff,#760188"
+        
+        data-config-root="/"
+        
+        data-toc="true"
+        data-toc-max-depth="2"
+        
+        
+    >
+        <nav id="theme-nav">
+    <div class="inner">
+        <a class="title" href="/">Blog</a>
+        <div class="nav-arrow"></div>
+        <div class="nav-items">
+            <a class="nav-item nav-item-home" href="/">Home</a>
+            
+            
+            <a class="nav-item" href="/archives">Archives</a>
+            
+            
+            
+            <a class="nav-item" href="/friends">Friends</a>
+            
+            
+            
+            <a class="nav-item" href="/projects">Projects</a>
+            
+            
+            
+            <a class="nav-item" href="/about">About</a>
+            
+            
+            
+            <a class="nav-item nav-item-github nav-item-icon" href="https://github.com/MrWillCom" target="_blank" aria-label="GitHub">&nbsp;</a>
+            
+            
+            
+            <a class="nav-item nav-item-codepen nav-item-icon" href="https://codepen.io/mrwillcom" target="_blank" aria-label="CodePen">&nbsp;</a>
+            
+            
+            
+            <a class="nav-item nav-item-patreon nav-item-icon" href="https://www.patreon.com/MrWillCom" target="_blank" aria-label="Patreon">&nbsp;</a>
+            
+            
+            
+            <a class="nav-item nav-item-mastodon nav-item-icon" href="https://noc.social/@MrWillCom" target="_blank" aria-label="Mastodon">&nbsp;</a>
+            
+            
+            
+            <a class="nav-item nav-item-discord nav-item-icon" href="https://discord.gg/UKuFDjcfY8" target="_blank" aria-label="Discord">&nbsp;</a>
+            
+            
+            
+            <a class="nav-item nav-item-search nav-item-icon" href="/search" target="_blank" aria-label="Search">&nbsp;</a>
+            
+            
+        </div>
     </div>
-    <ul class="card-archive-list">
-  
-      <li class="card-archive-list-item">
-        <a class="card-archive-list-link" href="/archives/2024/12/">
-          <span class="card-archive-list-date">十二月 2024</span>
-          <span class="card-archive-list-count">5</span>
-        </a>
-      </li>
+</nav>
+        <div class="container">
     
-      <li class="card-archive-list-item">
-        <a class="card-archive-list-link" href="/archives/2024/11/">
-          <span class="card-archive-list-date">十一月 2024</span>
-          <span class="card-archive-list-count">6</span>
-        </a>
-      </li>
-    </ul></div><div class="card-widget card-webinfo"><div class="item-headline"><i class="fas fa-chart-line"></i><span>网站信息</span></div><div class="webinfo"><div class="webinfo-item"><div class="item-name">文章数目 :</div><div class="item-count">11</div></div><div class="webinfo-item"><div class="item-name">本站总字数 :</div><div class="item-count">19.7k</div></div><div class="webinfo-item"><div class="item-name">本站访客数 :</div><div class="item-count" id="busuanzi_value_site_uv"><i class="fa-solid fa-spinner fa-spin"></i></div></div><div class="webinfo-item"><div class="item-name">本站总浏览量 :</div><div class="item-count" id="busuanzi_value_site_pv"><i class="fa-solid fa-spinner fa-spin"></i></div></div><div class="webinfo-item"><div class="item-name">最后更新时间 :</div><div class="item-count" id="last-push-date" data-lastPushDate="2024-12-05T12:39:00.160Z"><i class="fa-solid fa-spinner fa-spin"></i></div></div></div></div></div></div></main><footer id="footer" style="background-image: url(https://api.paugram.com/wallpaper/);"><div id="footer-wrap"><div class="copyright">&copy;2024 By Damue</div><div class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly</a></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="darkmode" type="button" title="日间和夜间模式切换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><script>(() => {
-  const panguFn = () => {
-    if (typeof pangu === 'object') pangu.autoSpacingPage()
-    else {
-      btf.getScript('https://cdn.jsdelivr.net/npm/pangu/dist/browser/pangu.min.js')
-        .then(() => {
-          pangu.autoSpacingPage()
-        })
-    }
-  }
+    <div class="hero">
+        <div class="group">
+            <h2 class="sub"></h2>
+            <h2 class="large">记录一些生成的垃圾</h2>
+        </div>
+    </div>
 
-  const panguInit = () => {
-    if (false){
-      GLOBAL_CONFIG_SITE.isPost && panguFn()
-    } else {
-      panguFn()
-    }
-  }
+    <h2 class="section-title">Latest Posts</h2>
+    
 
-  btf.addGlobalFn('pjaxComplete', panguInit, 'pangu')
-  document.addEventListener('DOMContentLoaded', panguInit)
-})()</script><div class="js-pjax"></div><script id="canvas_nest" defer="defer" color="0,0,255" opacity="0.7" zIndex="-1" count="99" mobile="false" src="https://cdn.jsdelivr.net/npm/butterfly-extsrc/dist/canvas-nest.min.js"></script><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div></body></html>
+    <div class="post-list">
+        
+        <article class="post-list-item">
+            <a href="/2024/12/17/Live_Capture_CartoonGirl/">
+                
+                <div class="content">
+                    
+                    <div class="categories text-uppercase">
+                    
+                        <span>live</span>
+                    
+                    </div>
+                    
+                    <div class="title">
+                        How to make a live2d(maybe)
+                    </div>
+                    
+                    
+                    <div class="time">
+                        <span>December</span>
+                        <span>&nbsp;17,&nbsp;</span>
+                        <span>2024</span>
+                    </div>
+                    
+                </div>
+            </a>
+        </article>
+        
+        <article class="post-list-item">
+            <a href="/2024/12/05/UE_AnimationSystem/">
+                
+                <div class="content">
+                    
+                    <div class="categories text-uppercase">
+                    
+                        <span>UE</span>
+                    
+                    </div>
+                    
+                    <div class="title">
+                        UE_AnimationSystem
+                    </div>
+                    
+                    
+                    <div class="time">
+                        <span>December</span>
+                        <span>&nbsp;5,&nbsp;</span>
+                        <span>2024</span>
+                    </div>
+                    
+                </div>
+            </a>
+        </article>
+        
+        <article class="post-list-item">
+            <a href="/2024/12/05/GAS_GameplayEffect/">
+                
+                <div class="content">
+                    
+                    <div class="title">
+                        GAS GameplayEffect
+                    </div>
+                    
+                    
+                    <div class="time">
+                        <span>December</span>
+                        <span>&nbsp;5,&nbsp;</span>
+                        <span>2024</span>
+                    </div>
+                    
+                </div>
+            </a>
+        </article>
+        
+        <article class="post-list-item">
+            <a href="/2024/12/05/LUA_Logic/">
+                
+                <div class="content">
+                    
+                    <div class="title">
+                        Lua_Logic
+                    </div>
+                    
+                    
+                    <div class="time">
+                        <span>December</span>
+                        <span>&nbsp;5,&nbsp;</span>
+                        <span>2024</span>
+                    </div>
+                    
+                </div>
+            </a>
+        </article>
+        
+        <article class="post-list-item">
+            <a href="/2024/12/05/UE_Learning/">
+                
+                <div class="content">
+                    
+                    <div class="categories text-uppercase">
+                    
+                        <span>UE</span>
+                    
+                    </div>
+                    
+                    <div class="title">
+                        UE_Learning
+                    </div>
+                    
+                    
+                    <div class="time">
+                        <span>December</span>
+                        <span>&nbsp;5,&nbsp;</span>
+                        <span>2024</span>
+                    </div>
+                    
+                </div>
+            </a>
+        </article>
+        
+        <article class="post-list-item">
+            <a href="/2024/12/03/Python/">
+                
+                <div class="content">
+                    
+                    <div class="categories text-uppercase">
+                    
+                        <span>Python</span>
+                    
+                    </div>
+                    
+                    <div class="title">
+                        Python
+                    </div>
+                    
+                    
+                    <div class="time">
+                        <span>December</span>
+                        <span>&nbsp;3,&nbsp;</span>
+                        <span>2024</span>
+                    </div>
+                    
+                </div>
+            </a>
+        </article>
+        
+        <article class="post-list-item">
+            <a href="/2024/11/22/C_Basic/">
+                
+                <div class="content">
+                    
+                    <div class="categories text-uppercase">
+                    
+                        <span>C++</span>
+                    
+                    </div>
+                    
+                    <div class="title">
+                        C++Basic
+                    </div>
+                    
+                    
+                    <div class="time">
+                        <span>November</span>
+                        <span>&nbsp;22,&nbsp;</span>
+                        <span>2024</span>
+                    </div>
+                    
+                </div>
+            </a>
+        </article>
+        
+        <article class="post-list-item">
+            <a href="/2024/11/22/Singleton/">
+                
+                <div class="content">
+                    
+                    <div class="categories text-uppercase">
+                    
+                        <span>UE</span>
+                    
+                    </div>
+                    
+                    <div class="title">
+                        Singleton
+                    </div>
+                    
+                    
+                    <div class="time">
+                        <span>November</span>
+                        <span>&nbsp;22,&nbsp;</span>
+                        <span>2024</span>
+                    </div>
+                    
+                </div>
+            </a>
+        </article>
+        
+        <article class="post-list-item">
+            <a href="/2024/11/21/Lua/">
+                
+                <div class="content">
+                    
+                    <div class="title">
+                        Lua
+                    </div>
+                    
+                    
+                    <div class="time">
+                        <span>November</span>
+                        <span>&nbsp;21,&nbsp;</span>
+                        <span>2024</span>
+                    </div>
+                    
+                </div>
+            </a>
+        </article>
+        
+        <article class="post-list-item">
+            <a href="/2024/11/20/umg/">
+                
+                <div class="content">
+                    
+                    <div class="categories text-uppercase">
+                    
+                        <span>UE</span>
+                    
+                    </div>
+                    
+                    <div class="title">
+                        UMG初探
+                    </div>
+                    
+                    
+                    <div class="time">
+                        <span>November</span>
+                        <span>&nbsp;20,&nbsp;</span>
+                        <span>2024</span>
+                    </div>
+                    
+                </div>
+            </a>
+        </article>
+        
+    </div>
+
+    
+<div class="paginator">
+    <span class="page-number current">1</span><a class="page-number" href="/page/2/">2</a><a class="extend next" rel="next" href="/page/2/">Next</a>
+</div>
+
+</div>
+        <footer>
+    <div class="inner">
+        <div class="links">
+            
+            <div class="group">
+                <h2 class="title">Blog</h2>
+                
+                <a href="/" class="item">Blog</a>
+                
+                <a href="/archives" class="item">Archives</a>
+                
+                <a href="/tags" class="item">Tags</a>
+                
+                <a href="/categories" class="item">Categories</a>
+                
+                <a href="/search" class="item">Search</a>
+                
+                <a href="/friends" class="item">Friends</a>
+                
+                <a href="/projects" class="item">Projects</a>
+                
+                <a href="/resume" class="item">Resume</a>
+                
+                <a href="/about" class="item">About</a>
+                
+                <a href="/atom.xml" class="item">RSS</a>
+                
+            </div>
+            
+            <div class="group">
+                <h2 class="title">Projects</h2>
+                
+                <a target="_blank" rel="noopener" href="https://github.com/MrWillCom/rsa-cli" class="item">RSA CLI</a>
+                
+                <a target="_blank" rel="noopener" href="https://github.com/MrWillCom/hexo-theme-cupertino" class="item">Hexo Theme Cupertino</a>
+                
+                <a target="_blank" rel="noopener" href="https://github.com/MrWillCom/a-calendar" class="item">A Calendar</a>
+                
+                <a target="_blank" rel="noopener" href="https://github.com/MrWillCom/auto-mirroring-bucket" class="item">Auto Mirroring Bucket</a>
+                
+            </div>
+            
+            <div class="group">
+                <h2 class="title">Me</h2>
+                
+                <a target="_blank" rel="noopener" href="https://github.com/MrWillCom" class="item">GitHub</a>
+                
+                <a target="_blank" rel="noopener" href="https://codepen.io/mrwillcom" class="item">CodePen</a>
+                
+                <a target="_blank" rel="noopener" href="https://www.patreon.com/MrWillCom" class="item">Patreon</a>
+                
+                <a target="_blank" rel="noopener" href="https://noc.social/@MrWillCom" class="item">Mastodon</a>
+                
+                <a target="_blank" rel="noopener" href="https://discord.gg/UKuFDjcfY8" class="item">Discord</a>
+                
+                <a href="mailto:mr.will.com@outlook.com" class="item">Email</a>
+                
+            </div>
+            
+        </div>
+        <span>&copy; 2024 Damue<br>Powered by <a href="http://hexo.io/" target="_blank">Hexo</a> </span>
+        
+        
+            <br>
+            <div class="color-scheme-toggle" role="radiogroup" id="theme-color-scheme-toggle">
+                <label>
+                    <input type="radio" value="light">
+                    <span>Light</span>
+                </label>
+                <label>
+                    <input type="radio" value="dark">
+                    <span>Dark</span>
+                </label>
+                <label>
+                    <input type="radio" value="auto">
+                    <span>Auto</span>
+                </label>
+            </div>
+        
+    </div>
+</footer>
+
+
+        
+<script src="/js/main.js"></script>
+
+        
+        
+        
+
+        
+        <script src="https://unpkg.com/scrollreveal"></script>
+        <script>
+            window.addEventListener('load', () => {
+                ScrollReveal({ delay: 250, reset: true, easing: 'cubic-bezier(0, 0, 0, 1)' })
+                ScrollReveal().reveal('.post-list-item .cover-img img')
+                ScrollReveal().reveal('.post-list-item, .card, .content p img, .content .block-large img', { distance: '60px', origin: 'bottom', duration: 800 })
+            })
+        </script>
+        
+    </body>
+</html>
