@@ -1,19 +1,23 @@
-.tags .tag {
-  padding: 8px 16px;
-  margin: 4px;
-  font-size: 14px;
-  border-radius: 980px;
-  background-color: var(--white);
-  color: var(--black-2);
-  text-decoration: none;
-  border: 1px solid var(--border-color);
+.tag-title {
+  max-width: content-max-width;
+  margin-top: 20px;
+  margin-bottom: 0.5em;
+  font-size: content-font-size;
 }
-
-.tags .tag:hover {
-  background-color: var(--white-1);
-  color: var(--black);
+.tags-wrap {
+  margin-top: 20px;
 }
-
-.tags {
-  margin-bottom: 128px;
+.tags-wrap .tags a {
+  padding-right: 0.25em;
+  display: inline-block;
+}
+.tags-wrap .one-tag-list .tag-text {
+  margin: 1em 0 0.5em 0;
+  font-size: title-font-size;
+}
+.tags-wrap .one-tag-list .post-preview {
+  margin-bottom: 0.5em;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  grid-column-gap: 2em;
 }
